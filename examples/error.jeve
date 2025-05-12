@@ -1,0 +1,12 @@
+// This file has intentional errors to test error reporting
+x = 10;
+print x;  // This is fine
+
+y = "Hello";
+print y + 5;  // Error: Can't concatenate string with number
+
+print "Unterminated string;  // Error: Missing closing quote
+
+if (x > 5) {  // Error: Unknown keyword
+    print "x is greater than 5";
+} 

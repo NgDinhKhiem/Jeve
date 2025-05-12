@@ -1,0 +1,37 @@
+// Array memory test - checks for double free issues
+// This test creates and manipulates arrays to make sure memory management works correctly
+
+// Create a simple array
+simpleArray = [1, 2, 3, 4, 5];
+print("Simple array created: " + simpleArray);
+
+// Create a nested array
+nestedArray = [[6, 7, 8], [9, 10, 11]];
+print("Nested array created: " + nestedArray);
+
+// Access and modify elements
+print("Element at index 2: " + simpleArray[2]);
+simpleArray[2] = 100;
+print("Modified array: " + simpleArray);
+
+// Create and manipulate a large array to stress test GC
+largeArray = [];
+for i = 0 to 99 {
+    innerArray = [i, i*2, i*3];
+    print("Created inner array: " + innerArray);
+    largeArray[i] = innerArray;
+    print("Added to large array at index " + i);
+}
+
+print("Large array created with many nested arrays");
+
+// Overwrite references to trigger garbage collection
+largeArray = [];
+simpleArray = [];
+nestedArray = [];
+
+// Force garbage collection
+print("Forcing garbage collection");
+debug_gc();
+
+print("Test completed successfully"); 

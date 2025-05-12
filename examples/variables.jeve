@@ -1,0 +1,31 @@
+// Variable declaration and basic arithmetic
+x = 10;
+y = 5;
+print "x = " + x;  // String concatenation with number
+print "y = " + y;
+
+// Calculations with variables
+sum = x + y;
+print "Sum: " + sum;
+
+product = x * y;
+print "Product: " + product;
+
+// String variables
+name = "Alice";
+age = 25;
+print "Hello, " + name + "! You are " + age + " years old.";
+
+// Using variables in expressions
+result = (x + y) * 2;
+print "Result of (x + y) * 2 = " + result;
+
+// Reading input
+print "What is your name?";
+input_name = input();
+print "Hello, " + input_name + "!";
+
+print "How old are you?";
+input_age = input();
+years_diff = age - input_age;
+print "The age difference is: " + years_diff + " years."; 

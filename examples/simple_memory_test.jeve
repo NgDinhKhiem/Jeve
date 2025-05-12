@@ -1,0 +1,31 @@
+// Simple memory test with minimal array operations
+numbers = [1, 2, 3, 4, 5];
+
+print("Original array:");
+for i = 0 to 4 {
+    print("Index " + i + ": " + numbers[i]);
+}
+
+// Array modification
+numbers[0] = 10;
+numbers[2] = 30;
+
+print("\nModified array:");
+for i = 0 to 4 {
+    print("Index " + i + ": " + numbers[i]);
+}
+
+// Check array length
+print("\nArray length: " + numbers.length);
+
+// Create a small number of objects to test memory tracking
+print("\nCreating 10 small arrays:");
+for i = 1 to 10 {
+    temp = ["Array " + i, "Element 2", "Element 3"];
+    print("Created array " + i + " with length " + temp.length);
+}
+
+print("\nMemory Usage Report:");
+print("Check memory_usage.csv for detailed memory tracking");
+
+print("\nTest completed!"); 

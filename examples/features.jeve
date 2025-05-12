@@ -1,0 +1,42 @@
+// Type annotations
+age:int = 25;
+name:string = "Alice";
+height:float = 1.75;
+is_student:bool = true;
+
+// Function calls with both syntaxes
+print("Hello, " + name + "!");
+print age;
+
+// Conditional statements
+if (age > 18) {
+    print("You are an adult");
+} else {
+    print("You are a minor");
+}
+
+// While loop
+count:int = 0;
+while (count < 5) {
+    print("Count: " + count);
+    count = count + 1;
+}
+
+// Type checking
+try {
+    age = "not a number";  // This will fail
+} catch {
+    print("Type error caught!");
+}
+
+// Input with type checking
+print("Enter your age:");
+age = input("int");
+print("You entered: " + age);
+
+// Boolean expressions
+if (age > 18 && is_student) {
+    print("You are an adult student");
+} else if (age <= 18 || !is_student) {
+    print("You are either young or not a student");
+} 

@@ -1,0 +1,15 @@
+// Single element array test
+print("Initial memory state:");
+debug_gc();
+
+// Create a single-element array
+arr = [42];
+print("\nAfter creating arr = [42]:");
+debug_gc();
+
+// Access the array element
+print("\nArray element: arr[0] = " + arr[0]);
+print("\nAfter accessing array element:");
+debug_gc();
+
+print("\nTest completed!"); 

@@ -1,0 +1,47 @@
+// Test file for conditional statements
+
+// Test variables
+a = 10;
+b = 5;
+
+// Simple if statement
+if (a > b) {
+    print("a is greater than b");
+}
+
+// If-else statement
+if (a < b) {
+    print("This should not print");
+} else {
+    print("a is not less than b");
+}
+
+// Nested if statements
+if (a >= 10) {
+    print("a is at least 10");
+    if (b <= 5) {
+        print("and b is at most 5");
+    }
+}
+
+// Multiple conditions
+if ((a > 5) & (b < 10)) {
+    print("Both conditions are true");
+}
+
+// Test with boolean variables
+isTrue:boolean = true;
+isFalse = false;
+
+if (isTrue) {
+    print("isTrue is true");
+}
+
+if (!isFalse) {
+    print("isFalse is false");
+}
+
+// Test with expressions
+if ((a + b) > 15) {
+    print("a + b is greater than 10");
+} 

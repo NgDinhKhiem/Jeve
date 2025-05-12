@@ -1,0 +1,34 @@
+Value Class Issues:
+
+1. Potential circular references:
+   - The current Value class implementation might have circular references issues, especially with arrays containing other arrays.
+   - This could lead to memory leaks or infinite recursion during destruction.
+
+2. Complex memory management:
+   - Our implementation uses dynamic memory allocation which complicates ownership and lifetime management.
+   - The copy-on-write semantics added complexity without clear benefits.
+
+3. Recursive destruction:
+   - When a Value containing an array of Values is destroyed, it might trigger recursive destruction.
+   - This can lead to stack overflow for deeply nested arrays.
+
+4. Potential issues in operators:
+   - The copy and move constructors/assignment operators may not be handling all edge cases correctly.
+   - This could lead to memory leaks or double-free errors.
+
+5. Inefficient memory usage:
+   - Each array element creates multiple objects and pointers, leading to high memory overhead.
+
+6. Serialization issues:
+   - The toString() implementation might cause infinite recursion for self-referential structures.
+
+7. Deadlock potential:
+   - Concurrent operations on shared values could potentially deadlock due to complex ownership patterns.
+
+Recommendations:
+1. Simplify the Value class to a variant-like structure without dynamic allocations.
+2. Use std::vector<Value> directly for arrays instead of pointer indirection.
+3. Implement proper copy semantics without shared or complex ownership.
+4. Consider using a garbage-collected approach with global reference tracking.
+5. Implement basic memory pooling for Values to reduce allocation overhead.
+6. Switch to a non-recursive algorithm for operations on nested structures. 

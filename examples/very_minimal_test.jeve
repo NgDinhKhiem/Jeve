@@ -1,0 +1,15 @@
+// Very minimal test - no arrays
+print("Initial memory state:");
+debug_gc();
+
+// Create a simple integer variable
+x = 42;
+print("\nAfter creating x = 42:");
+debug_gc();
+
+// Print the variable
+print("\nValue of x: " + x);
+print("\nAfter printing x:");
+debug_gc();
+
+print("\nTest completed!"); 

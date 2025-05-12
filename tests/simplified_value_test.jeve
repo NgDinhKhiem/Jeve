@@ -1,0 +1,19 @@
+// Simplified test to help diagnose the issue
+print("Starting simplified test");
+
+// Create simple variables - NO ARRAYS
+a = 1;
+b = 2;
+print("Created variables: a=" + a + ", b=" + b);
+
+// Create and test a function
+sum = a + b; 
+print("Sum: " + sum);
+
+// Test large numbers
+large = 123456789;
+print("Large number: " + large);
+
+// Done
+print("Test complete");
+debug_gc(); 

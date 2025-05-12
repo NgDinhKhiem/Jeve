@@ -1,0 +1,9 @@
+// Dummy array test that does nothing with arrays
+print("Starting test");
+
+// Just create an integer - no array
+dummy = 42;
+print("Created dummy value: " + dummy);
+
+// Finish
+print("Test complete"); 

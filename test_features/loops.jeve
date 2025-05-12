@@ -1,0 +1,49 @@
+// Test file for loops
+
+// Basic for loop
+print("Basic for loop:");
+for i = 1 to 5 {
+    print("Loop iteration: " + i);
+}
+
+// For loop with step
+print("\nFor loop with step:");
+for j = 0 to 10 step 2 {
+    print("Even number: " + j);
+}
+
+// While loop
+print("\nWhile loop:");
+count = 5;
+while (count > 0) {
+    print("Countdown: " + count);
+    count = count - 1;
+}
+
+// Nested loops
+print("\nNested loops:");
+for outer = 1 to 3 {
+    print("Outer loop: " + outer);
+    for inner = 1 to 2 {
+        print("  Inner loop: " + inner);
+    }
+}
+
+// Loop with calculation
+print("\nLoop with calculation:");
+sum = 0;
+for k = 1 to 5 {
+    sum = sum + k;
+    print("Running sum: " + sum);
+}
+print("Final sum: " + sum);
+
+// Loop with conditional
+print("\nLoop with conditional:");
+for m = 1 to 10 {
+    if (m % 2 == 0) {
+        print(m + " is even");
+    } else {
+        print(m + " is odd");
+    }
+} 

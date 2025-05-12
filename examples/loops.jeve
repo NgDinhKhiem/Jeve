@@ -1,0 +1,40 @@
+// Array creation and access
+numbers = [1, 2, 3, 4, 5];
+print("First number: " + numbers[0]);
+print("Last number: " + numbers[4]);
+
+// Traditional for loop
+for i = 1 to 5 {
+    print("Count: " + i);
+}
+
+// For loop with step
+for i = 0 to 10 step 2 {
+    print("Even number: " + i);
+}
+
+// Smart loop with index and value
+names = ["Alice", "Bob", "Charlie"];
+for i, name in names {
+    print("Index " + i + ": " + name);
+}
+
+// Nested loops
+matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+];
+
+for i = 0 to 2 {
+    for j = 0 to 2 {
+        print("Matrix[" + i + "][" + j + "] = " + matrix[i][j]);
+    }
+}
+
+// Smart loop with nested arrays
+for i, row in matrix {
+    for j, value in row {
+        print("Matrix[" + i + "][" + j + "] = " + value);
+    }
+} 

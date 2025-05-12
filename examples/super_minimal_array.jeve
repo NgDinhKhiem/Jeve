@@ -1,0 +1,10 @@
+// Super minimal array test
+print("Initial memory state:");
+debug_gc();
+
+// Create a single-element array
+arr = [42];
+print("Created array");
+
+// Print array information without accessing elements
+print("Test completed!"); 

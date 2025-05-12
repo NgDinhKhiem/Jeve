@@ -1,0 +1,29 @@
+// Simple memory test with debug_gc function
+print("Initial memory state:");
+debug_gc();
+
+// Create a small array
+numbers = [1, 2, 3, 4, 5];
+print("\nAfter creating numbers array:");
+debug_gc();
+
+// Create a string array
+names = ["Alice", "Bob", "Charlie", "David"];
+print("\nAfter creating names array:");
+debug_gc();
+
+// Array modification
+numbers[0] = 10;
+numbers[2] = 30;
+print("\nAfter modifying numbers array:");
+debug_gc();
+
+// Create a small number of objects to test memory tracking
+print("\nCreating 5 small arrays:");
+for i = 1 to 5 {
+    temp = ["Array " + i, "Element 2", "Element 3"];
+    print("Created array " + i);
+    debug_gc();
+}
+
+print("\nTest completed!"); 

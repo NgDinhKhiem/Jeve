@@ -1,0 +1,30 @@
+// Simple array memory test
+print("Initial memory state:");
+debug_gc();
+
+// Create a small array
+numbers = [1, 2, 3, 4, 5];
+print("\nAfter creating numbers array:");
+debug_gc();
+
+// Array modification
+numbers[0] = 10;
+print("\nAfter modifying numbers[0]:");
+debug_gc();
+
+// Array concatenation - small
+numbers = numbers + [6];
+print("\nAfter adding one element:");
+debug_gc();
+
+// Create a second array
+more = [7, 8, 9];
+print("\nAfter creating more array:");
+debug_gc();
+
+// Array concatenation - larger
+combined = numbers + more;
+print("\nAfter combining arrays:");
+debug_gc();
+
+print("\nTest completed!"); 

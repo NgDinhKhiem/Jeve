@@ -1,0 +1,13 @@
+// Super minimal array test
+print("Starting test");
+
+// Create array
+arr = [1, 2, 3];
+print("Array created");
+
+// Print array
+print("Array: " + arr);
+
+// Finish
+print("Test complete");
+debug_gc(); 

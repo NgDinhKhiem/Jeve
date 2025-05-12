@@ -1,0 +1,104 @@
+// Array creation and manipulation - using references for better memory usage
+numbers = [1, 2, 3, 4, 5];
+names = ["Alice", "Bob", "Charlie", "David"];
+
+// Print array elements
+print("Original numbers array:");
+for i = 0 to 4 {
+    print("Index " + i + ": " + numbers[i]);
+}
+
+// Array modification
+numbers[0] = 10;
+numbers[2] = 30;
+
+print("\nModified numbers array:");
+for i = 0 to 4 {
+    print("Index " + i + ": " + numbers[i]);
+}
+
+// Nested arrays (matrix)
+matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+];
+
+print("\nMatrix elements:");
+for i = 0 to 2 {
+    for j = 0 to 2 {
+        print("matrix[" + i + "][" + j + "] = " + matrix[i][j]);
+    }
+}
+
+// Array concatenation
+combined = names + ["Eve", "Frank"];
+print("\nCombined names array:");
+for i = 0 to 5 {
+    print("Index " + i + ": " + combined[i]);
+}
+
+// Array operations with different types
+mixed = [1.5, 2.7, 3.14, 4.0];
+print("\nMixed array operations:");
+for i = 0 to 3 {
+    print("Value " + i + ": " + mixed[i]);
+    // Create some temporary objects to test memory management
+    temp = "Temporary string " + mixed[i];
+    print(temp);
+}
+
+// Check array length property
+print("\nArray lengths:");
+print("numbers.length: " + numbers.length);
+print("names.length: " + names.length);
+print("matrix.length: " + matrix.length);
+print("mixed.length: " + mixed.length);
+
+// Large array creation to test memory limits (reduced size)
+print("\nCreating array...");
+large_array = [];
+for i = 1 to 100 {  // Reduced from 1000 to 100
+    large_array = large_array + [i];
+    if (i % 20 == 0) {  // Changed from 100 to 20
+        print("Added " + i + " elements");
+    }
+}
+
+// Array filtering (using a new array)
+filtered = [];
+for i = 0 to 99 {  // Reduced from 999 to 99
+    if (large_array[i] % 2 == 0) {
+        filtered = filtered + [large_array[i]];
+    }
+}
+
+print("\nFiltered array (even numbers):");
+print("Total elements: " + filtered.length);
+for i = 0 to 9 {
+    print("Element " + i + ": " + filtered[i]);
+}
+
+// Test array bounds
+try {
+    print("\nTesting array bounds...");
+    print("Accessing out of bounds: " + numbers[10]);
+} catch {
+    print("Caught out of bounds error!");
+}
+
+// Memory-intensive operations (reduced size)
+print("\nPerforming memory-intensive operations...");
+for i = 1 to 10 {  // Reduced from 100 to 10
+    temp_array = [];
+    for j = 1 to 10 {  // Reduced from 100 to 10
+        temp_array = temp_array + ["String " + j];
+    }
+    print("Created array " + i);
+}
+
+// Check memory usage stats
+print("\nMemory Usage Report:");
+print("Check memory_usage.csv for detailed memory tracking");
+
+print("\nTest completed!"); 

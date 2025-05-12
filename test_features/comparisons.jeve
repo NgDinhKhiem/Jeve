@@ -1,0 +1,34 @@
+// Test file for comparison operators
+
+// Test variables
+a = 10;
+b = 5;
+c = 10;
+
+print "a: " + a + "| b: " + b + "| c: " + c; 
+
+// Equality comparison
+print("a == b: " + (a == b));  // false
+print("a == c: " + (a == c));  // true
+
+// Inequality comparison
+print("a != b: " + (a != b));  // true
+print("a != c: " + (a != c));  // false
+
+// Greater than
+print("a > b: " + (a > b));    // true
+print("b > a: " + (b > a));    // false
+
+// Less than
+print("a < b: " + (a < b));    // false
+print("b < a: " + (b < a));    // true
+
+// Greater than or equal
+print("a >= c: " + (a >= c));  // true
+print("a >= b: " + (a >= b));  // true
+print("b >= a: " + (b >= a));  // false
+
+// Less than or equal
+print("a <= c: " + (a <= c));  // true
+print("a <= b: " + (a <= b));  // false
+print("b <= a: " + (b <= a));  // true 

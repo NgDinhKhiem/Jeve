@@ -1,0 +1,8 @@
+// Minimal array test - just creates an array and exits
+print("Starting test");
+
+// Create array but don't access it
+arr = [1, 2, 3];
+
+// Exit immediately
+print("Test complete"); 

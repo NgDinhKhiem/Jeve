@@ -1,0 +1,25 @@
+print "Jeve Calculator";
+print "==============";
+
+print "1. Basic Operations:";
+print 10 + 5;    // Addition
+print 20 - 8;    // Subtraction
+print 6 * 7;     // Multiplication
+print 100 / 2;   // Division
+
+print "\n2. Complex Expressions:";
+print (10 + 5) * 2;           // Parentheses
+print 100 - 50 / 2;           // Operator precedence
+print (20 + 30) * (40 - 10);  // Multiple operations
+
+print "\n3. Multiple Operations:";
+print 5 + 5 + 5;              // Multiple additions
+print 10 * 2 * 3;             // Multiple multiplications
+print 100 - 20 - 30;          // Multiple subtractions
+print 1000 / 2 / 2;           // Multiple divisions
+
+print "\n4. Mixed Operations:";
+print 10 + 5 * 2;             // Addition and multiplication
+print (100 - 50) / 2;         // Subtraction and division
+print 20 * 3 + 10;            // Multiplication and addition
+print 100 / 2 - 20;           // Division and subtraction 

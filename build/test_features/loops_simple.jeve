@@ -1,0 +1,10 @@
+// Test file for loops
+print("Basic for loop:");
+for i = 1 to 5 {
+    print("Loop iteration: " + i);
+}
+
+print("While loop:");
+count = 5;
+while (count > 0) {
+    print("Countdown: " + count);

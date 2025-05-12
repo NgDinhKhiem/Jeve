@@ -1,0 +1,15 @@
+// Minimal memory test
+print("Initial memory state:");
+debug_gc();
+
+// Create a simple variable
+x = 42;
+print("\nAfter creating x = 42:");
+debug_gc();
+
+// Create a string
+s = "Hello, world!";
+print("\nAfter creating s = 'Hello, world!':");
+debug_gc();
+
+print("\nTest completed!"); 

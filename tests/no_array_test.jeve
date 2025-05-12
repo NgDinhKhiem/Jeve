@@ -1,0 +1,14 @@
+// Test with no arrays
+print("Starting test");
+
+// Create a simple variable
+x = 42;
+print("Variable created: " + x);
+
+// Add two numbers
+y = x + 10;
+print("Result: " + y);
+
+// Finish
+print("Test complete");
+debug_gc(); 

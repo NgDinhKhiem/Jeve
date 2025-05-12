@@ -1,0 +1,33 @@
+// Test file for logical operators
+
+// Test variables
+a = true;
+b = false;
+c = true;
+
+// Logical AND operator (&)
+print("a & b: " + (a & b));  // false
+print("a & c: " + (a & c));  // true
+print("b & b: " + (b & b));  // false
+
+// Logical OR operator (|)
+print("a | b: " + (a | b));  // true
+print("a | c: " + (a | c));  // true
+print("b | b: " + (b | b));  // false
+
+// Complex expressions
+print("a & b | c: " + (a & b | c));  // true
+print("a & (b | c): " + (a & (b | c)));  // true
+print("(a & b) | c: " + ((a & b) | c));  // true
+print("a | (b & c): " + (a | (b & c)));  // true
+print "(a | b) & c: " + ((a | b) & c);  // true
+
+// Test with integers (non-zero is true, zero is false)
+i = 1;
+j = 0;
+k = 5;
+
+print("i & j: " + (i & j));  // false (1 && 0)
+print("i & k: " + (i & k));  // true (1 && 5)
+print("i | j: " + (i | j));  // true (1 || 0)
+print("j | j: " + (j | j));  // false (0 || 0) 

@@ -1,0 +1,10 @@
+// Simple test for logical operators
+
+// Test variables
+a = true;
+b = false;
+
+// Basic tests
+print("a & b: " + (a & b));  // false
+
+// End test 

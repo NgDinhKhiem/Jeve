@@ -1,0 +1,20 @@
+print "Testing arithmetic operations:";
+print "1. Addition:";
+print 10 + 5;
+print 100 + 200;
+
+print "2. Subtraction:";
+print 20 - 8;
+print 100 - 50;
+
+print "3. Multiplication:";
+print 6 * 7;
+print 12 * 12;
+
+print "4. Division:";
+print 100 / 2;
+print 144 / 12;
+
+print "5. Complex expressions:";
+print 10 + 5 * 2;
+print (100 - 50) / 2; 

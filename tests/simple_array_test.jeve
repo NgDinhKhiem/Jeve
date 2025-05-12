@@ -1,0 +1,19 @@
+// Simple array test
+arr = [1, 2, 3];
+print("Array created: " + arr);
+
+// Read array element
+print("Element at index 1: " + arr[1]);
+
+// Test array element assignment 
+arr[1] = 200;
+print("Array after modification: " + arr);
+
+// Create empty array
+empty = [];
+print("Empty array: " + empty);
+
+// Force garbage collection
+debug_gc();
+
+print("Test completed successfully"); 

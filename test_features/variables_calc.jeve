@@ -1,0 +1,45 @@
+// Test file for variables and basic calculations
+
+// Integer variables
+a = 10;
+b = 5;
+print("a = " + a);
+print("b = " + b);
+
+// Basic arithmetic operations
+sum = a + b;
+diff = a - b;
+product = a * b;
+quotient = a / b;
+
+print("Sum: " + sum);
+print("Difference: " + diff);
+print("Product: " + product);
+print("Quotient: " + quotient);
+
+// Float variables
+x = 10.5;
+y = 2.5;
+print("x = " + x);
+print("y = " + y);
+
+// Mixed type operations
+z = x + y;
+print("x + y = " + z);
+
+z = x * b;  // float * int
+print("x * b = " + z);
+
+// String variables
+greeting = "Hello";
+name = "Jeve";
+message = greeting + " " + name + "!";
+print(message);
+
+// Variable reassignment
+a = 20;
+print("a is now: " + a);
+
+// Complex expression
+result = (a + b) * (x - y) / 2;
+print("Complex calculation result: " + result); 
