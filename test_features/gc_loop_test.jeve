@@ -1,0 +1,42 @@
+// Test GC behavior in different loop scenarios
+
+// Initial memory state
+print("Initial memory state:");
+debug_gc();
+clean_gc();
+
+// Scenario 1: Simple loop with temporary variables
+print("\nScenario 1: Simple loop with temporary variables");
+for i = 0 to 100 {
+    temp = i * 2;
+    if (i % 5 == 0) {
+        print("Iteration " + i + ":");
+        debug_gc();
+        clean_gc();
+    }
+}
+
+// Force cleanup after scenario 1
+print("\nCleaning up after scenario 1:");
+clean_gc();
+debug_gc();
+
+print("\nScenario 1: Simple loop with temporary variables");
+for i = 0 to 100 {
+    temp = i * 2;
+    if (i % 5 == 0) {
+        print("Iteration " + i + ":");
+        debug_gc();
+        clean_gc();
+    }
+}
+
+// Force cleanup after scenario 1
+print("\nCleaning up after scenario 1:");
+clean_gc();
+debug_gc();
+
+// Final memory state
+print("\nFinal memory state:");
+clean_gc();
+debug_gc();

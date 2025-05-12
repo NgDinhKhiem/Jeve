@@ -672,6 +672,22 @@ public:
     }
 };
 
+// Add CleanGCNode class to force garbage collection
+class CleanGCNode : public ASTNode {
+private:
+    GarbageCollector* gc;
+
+public:
+    CleanGCNode(GarbageCollector* gc = nullptr) : gc(gc) {}
+
+    Value evaluate(SymbolTable& scope) override {
+        if (gc) {
+            gc->collect(); // Force immediate garbage collection
+        }
+        return Value(); // Return null
+    }
+};
+
 class UnaryOpNode : public ASTNode {
 private:
     Ref<ASTNode> operand;

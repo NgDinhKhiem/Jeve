@@ -30,4 +30,31 @@ k = 5;
 print("i & j: " + (i & j));  // false (1 && 0)
 print("i & k: " + (i & k));  // true (1 && 5)
 print("i | j: " + (i | j));  // true (1 || 0)
-print("j | j: " + (j | j));  // false (0 || 0) 
+print("j | j: " + (j | j));  // false (0 || 0)
+
+// Test with different types
+str1 = "hello";
+str2 = "";
+print("str1 & str2: " + (str1 & str2));  // false (non-empty && empty)
+print("str1 | str2: " + (str1 | str2));  // true (non-empty || empty)
+
+// Test with mixed types
+print("i & str1: " + (i & str1));  // true (non-zero && non-empty)
+print("j | arr1: " + (j | arr1));  // true (zero || non-empty)
+
+// Test with floating point numbers
+f1 = 3.14;
+f2 = 0.0;
+print("f1 & f2: " + (f1 & f2));  // false (non-zero && zero)
+print("f1 | f2: " + (f1 | f2));  // true (non-zero || zero)
+
+// Test with boolean literals
+print("true & false: " + (true & false));  // false
+print("true | false: " + (true | false));  // true
+
+// Test with complex expressions
+print("(i & k) | (j & str1): " + ((i & k) | (j & str1)));  // true
+print("(arr1 & arr2) | (str1 & str2): " + ((arr1 & arr2) | (str1 & str2)));  // false
+
+// Print memory stats after operations
+debug_gc(); 

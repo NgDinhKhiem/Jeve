@@ -1,0 +1,59 @@
+// Create initial arrays
+arr1 = [1, 2, 3, 4, 5]
+arr2 = [6, 7, 8, 9, 10]
+
+// Print initial memory stats
+debug_gc()
+
+// Test array concatenation and garbage collection
+for i = 0 to 100 {
+    // Create temporary arrays
+    temp1 = [i, i+1, i+2]
+    temp2 = [i+3, i+4, i+5]
+    
+    // Perform operations that create temporary objects
+    result = temp1 + temp2
+    
+    // Print memory stats every 20 iterations
+    if (i % 20 == 0) {
+        print("Iteration " + i + ":")
+        debug_gc()
+    }
+}
+
+// Test nested operations with different types
+for i = 0 to 50 {
+    // Create arrays of different types
+    numArray = [i, i+1, i+2]
+    strArray = ["test" + i, "test" + (i+1)]
+    
+    // Perform logical operations
+    if (i & 1) {
+        result = numArray + strArray
+        print("Combined array length: " + result.length)
+    }
+    
+    // Print memory stats every 10 iterations
+    if (i % 10 == 0) {
+        print("Nested operation " + i + ":")
+        debug_gc()
+    }
+}
+
+// Test with large arrays
+largeArray = []
+for i = 0 to 1000 {
+    largeArray.push(i)
+}
+
+print("Large array created, length: " + largeArray.length)
+debug_gc()
+
+// Clear the large array
+largeArray = []
+print("Large array cleared")
+debug_gc()
+
+// Final memory stats
+print("Final memory stats:")
+debug_gc() 

@@ -451,6 +451,23 @@ private:
                 return interpreter.createObject<DebugGCNode>(&interpreter.getGC());
             }
             
+            // Handle clean_gc() function
+            if (name == "clean_gc" && currentToken.type == TokenType::PUNCTUATION && currentToken.value == "(") {
+                currentToken = lexer.nextToken();
+                if (currentToken.type != TokenType::PUNCTUATION || currentToken.value != ")") {
+                    throw ParseError("Expected ')' after clean_gc(", 
+                                   currentToken.line, currentToken.column);
+                }
+                currentToken = lexer.nextToken();
+                
+                if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == ";") {
+                    currentToken = lexer.nextToken();
+                }
+                
+                // Create a node that will force garbage collection
+                return interpreter.createObject<CleanGCNode>(&interpreter.getGC());
+            }
+            
             // Handle array access assignments like: array[index] = value;
             if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == "[") {
                 currentToken = lexer.nextToken();
