@@ -1,7 +1,0 @@
-// Test file for variables and basic calculations
-a = 10;
-b = 5;
-print("a = " + a);
-print("b = " + b);
-sum = a + b;
-print("Sum: " + sum);
