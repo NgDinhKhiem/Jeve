@@ -94,6 +94,8 @@ public:
             if (op == ">") return Value(l > r);
             if (op == "<=") return Value(l <= r);
             if (op == ">=") return Value(l >= r);
+            if (op == "&") return Value(l != 0 && r != 0);  // Logical AND
+            if (op == "|") return Value(l != 0 || r != 0);  // Logical OR
         } else if (lval.getType() == Value::Type::Float || rval.getType() == Value::Type::Float) {
             double l = (lval.getType() == Value::Type::Float) ? lval.getFloat() : static_cast<double>(lval.getInteger());
             double r = (rval.getType() == Value::Type::Float) ? rval.getFloat() : static_cast<double>(rval.getInteger());
@@ -115,6 +117,8 @@ public:
             if (op == ">") return Value(l > r);
             if (op == "<=") return Value(l <= r);
             if (op == ">=") return Value(l >= r);
+            if (op == "&") return Value(l != 0.0 && r != 0.0);  // Logical AND
+            if (op == "|") return Value(l != 0.0 || r != 0.0);  // Logical OR
         } else if (lval.getType() == Value::Type::String || rval.getType() == Value::Type::String) {
             std::string lstr = lval.toString();
             std::string rstr = rval.toString();
@@ -122,6 +126,8 @@ public:
             if (op == "+") return Value(lstr + rstr);
             if (op == "==") return Value(lstr == rstr);
             if (op == "!=") return Value(lstr != rstr);
+            if (op == "&") return Value(!lstr.empty() && !rstr.empty());  // Logical AND
+            if (op == "|") return Value(!lstr.empty() || !rstr.empty());  // Logical OR
         } else if (lval.getType() == Value::Type::Boolean && rval.getType() == Value::Type::Boolean) {
             bool l = lval.getBoolean();
             bool r = rval.getBoolean();
@@ -144,6 +150,14 @@ public:
             result.insert(result.end(), rightArray.begin(), rightArray.end());
             
             return Value(result);
+        }
+        
+        // Handle mixed type logical operations
+        if (op == "&" || op == "|") {
+            bool l = lval.toBoolean();
+            bool r = rval.toBoolean();
+            if (op == "&") return Value(l && r);
+            if (op == "|") return Value(l || r);
         }
         
         throw std::runtime_error("Invalid operation between types");

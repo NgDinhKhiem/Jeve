@@ -201,7 +201,9 @@ public:
     }
     
     bool getBoolean() const {
-        if (type != Type::Boolean) throw std::runtime_error("Value is not a boolean");
+        if (type != Type::Boolean) {
+            throw std::runtime_error("Value is not a boolean");
+        }
         return std::get<bool>(data);
     }
     
@@ -321,6 +323,25 @@ public:
     void appendToArray(const Value& value) {
         ValueArray* arr = prepareArrayForModification();
         arr->push_back(value);
+    }
+
+    bool toBoolean() const {
+        switch (type) {
+            case Type::Boolean:
+                return std::get<bool>(data);
+            case Type::Integer:
+                return std::get<int64_t>(data) != 0;
+            case Type::Float:
+                return std::get<double>(data) != 0.0;
+            case Type::String:
+                return !std::get<std::string>(data).empty();
+            case Type::Array: {
+                ValueArray* arr = std::get<ValueArray*>(data);
+                return arr && !arr->getElements().empty();
+            }
+            default:
+                return false;
+        }
     }
 };
 
