@@ -1,0 +1,20 @@
+// Basic sequential allocation test
+print("Starting basic sequential test...");
+
+// Create a simple variable
+x = 42;
+print("Created x = " + x);
+
+// Create a string
+message = "Hello";
+print("Created message = " + message);
+
+// Create a simple array
+numbers = [1, 2, 3];
+print("Created numbers array: " + numbers);
+
+// Print memory stats
+print("\nMemory stats after basic operations:");
+debug_gc();
+
+print("\nTest completed!"); 

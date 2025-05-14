@@ -1,0 +1,76 @@
+// Test for sequential runtime allocation
+print("Starting sequential allocation test...");
+print("Initial memory state:");
+debug_gc();
+
+// Create a simple variable
+x = 42;
+print("\nAfter creating x = 42:");
+debug_gc();
+
+// Create a string
+message = "Hello, World!";
+print("\nAfter creating message:");
+debug_gc();
+
+// Create an array with sequential elements
+numbers = [];
+print("\nAfter creating empty array:");
+debug_gc();
+
+// Add elements one by one to see sequential allocation
+for i = 1 to 5 {
+    numbers = numbers + [i];
+    print("\nAfter adding element " + i + ":");
+    debug_gc();
+}
+
+// Create nested structures
+matrix = [];
+print("\nAfter creating empty matrix:");
+debug_gc();
+
+// Add rows sequentially
+for i = 1 to 3 {
+    row = [];
+    for j = 1 to 3 {
+        row = row + [i * j];
+        print("\nAfter adding matrix element [" + i + "][" + j + "]:");
+        debug_gc();
+    }
+    matrix = matrix + [row];
+    print("\nAfter adding row " + i + ":");
+    debug_gc();
+}
+
+// Create a complex object with multiple properties
+person = {
+    "name": "John",
+    "age": 30,
+    "scores": [85, 90, 95]
+};
+print("\nAfter creating person object:");
+debug_gc();
+
+// Modify properties sequentially
+person["name"] = "Jane";
+print("\nAfter modifying name:");
+debug_gc();
+
+person["age"] = 25;
+print("\nAfter modifying age:");
+debug_gc();
+
+person["scores"][0] = 95;
+print("\nAfter modifying first score:");
+debug_gc();
+
+// Clean up some objects
+numbers = [];
+matrix = [];
+print("\nAfter cleaning up arrays:");
+debug_gc();
+
+// Final state
+print("\nFinal memory state:");
+debug_gc(); 

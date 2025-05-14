@@ -1,27 +1,9 @@
-// Test to verify object creation and garbage collection
-print("Initial memory state:");
-debug_gc();
+for i = 1 to 5 {
+    x = 10;
+    print "x: " + x;
+}
 
-// Create a simple variable
-x = 42;
-print("\nAfter creating x = 42:");
-debug_gc();
-
-// Create another variable
-y = 100;
-print("\nAfter creating y = 100:");
-debug_gc();
-
-// Perform some operations
-z = x + y;
-print("\nAfter x + y operation:");
-debug_gc();
-
-// Force garbage collection
-print("\nForcing garbage collection:");
-clean_gc();
-debug_gc();
-
-// Final state
-print("\nFinal memory state:");
-debug_gc();
+for i = 1 to 5 {
+    y = 10;
+    print "y: " + y;
+}

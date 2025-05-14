@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Forward.hpp"
+#include "ObjectPool.hpp"
+#include "GarbageCollector.hpp"
 #include <vector>
 #include <stack>
 #include <memory>
@@ -8,9 +10,6 @@
 #include <iostream>
 #include <string>
 #include <cctype>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
 #include <atomic>
 
 namespace jeve {
@@ -48,246 +47,108 @@ inline size_t parseMemorySize(const std::string& sizeStr) {
     return value * multiplier;
 }
 
-class MemoryLogger {
-private:
-    std::ofstream logFile;
-    bool isEnabled;
-    std::chrono::system_clock::time_point startTime;
-
-public:
-    MemoryLogger(const std::string& filename = "memory_usage.csv", bool enabled = true) 
-        : isEnabled(enabled), startTime(std::chrono::system_clock::now()) {
-        if (enabled) {
-            logFile.open(filename);
-            if (!logFile.is_open()) {
-                throw std::runtime_error("Could not open memory log file: " + filename);
-            }
-            // Write CSV header
-            logFile << "Timestamp,ElapsedMs,ObjectCount,HeapUsage,InitialHeap,MaxHeap\n";
-        }
-    }
-
-    ~MemoryLogger() {
-        if (logFile.is_open()) {
-            logFile.close();
-        }
-    }
-
-    void logMemoryUsage(size_t objectCount, size_t heapUsage, size_t initialHeap, size_t maxHeap) {
-        if (!isEnabled || !logFile.is_open()) return;
-
-        auto now = std::chrono::system_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime);
-        
-        // Get current timestamp
-        auto time = std::chrono::system_clock::to_time_t(now);
-        std::tm tm = *std::localtime(&time);
-        
-        logFile << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << ","
-                << elapsed.count() << ","
-                << objectCount << ","
-                << heapUsage << ","
-                << initialHeap << ","
-                << maxHeap << "\n";
-        
-        logFile.flush();
-    }
-
-    void enable() { isEnabled = true; }
-    void disable() { isEnabled = false; }
-    bool isLoggingEnabled() const { return isEnabled; }
-};
-
 class Object {
-private:
-    size_t refCount;
-    bool marked;
+protected:
+    bool marked = false;
+    std::atomic<int> refCount{0};  // Use atomic for thread safety
+    ObjectPool* pool;
 
 public:
-    Object() : refCount(0), marked(false) {}
+    Object(ObjectPool* p = nullptr) : pool(p) {}
     virtual ~Object() = default;
 
-    void incrementRefCount() { refCount++; }
-    void decrementRefCount() { if (refCount > 0) refCount--; }
-    size_t getRefCount() const { return refCount; }
-    bool isMarked() const { return marked; }
+    void incrementRefCount() {
+        refCount++;
+    }
+    
+    void decrementRefCount() {
+        if (refCount.fetch_sub(1) == 1) {
+            // Only delete if we were the last reference
+            if (pool) {
+                pool->release(this);
+            }
+            // Don't delete here - let the garbage collector handle it
+            // This prevents double deletion
+        }
+    }
+    
+    int getRefCount() const { return refCount; }
+    
     void mark() { marked = true; }
     void unmark() { marked = false; }
-};
-
-class GarbageCollector {
-private:
-    std::vector<Object*> objects;
-    std::stack<Object*> markStack;
-    bool isCollecting;
-    size_t initialHeap;
-    size_t maxHeap;
-    std::unique_ptr<MemoryLogger> logger;
+    bool isMarked() const { return marked; }
     
-    // Add deadlock detection state
-    std::atomic<bool> deadlockDetected;
+    void setPool(ObjectPool* p) { pool = p; }
+    ObjectPool* getPool() const { return pool; }
 
-public:
-    GarbageCollector(size_t initialHeapSize = 1024 * 1024, 
-                    size_t maxHeapSize = 64 * 1024 * 1024,
-                    const std::string& logFile = "memory_usage.csv")
-        : isCollecting(false), 
-          initialHeap(initialHeapSize), 
-          maxHeap(maxHeapSize),
-          logger(std::make_unique<MemoryLogger>(logFile)),
-          deadlockDetected(false) {}
-
-    ~GarbageCollector() { 
-        // Make sure we don't get stuck in the destructor
-        try {
-            collect();
-        } catch (...) {
-            std::cerr << "Error during final garbage collection" << std::endl;
-        }
-    }
-
-    template<typename T, typename... Args>
-    T* createObject(Args&&... args) {
-        // Check if we should collect garbage before creating a new object
-        checkAndCollect();
-        
-        // Calculate current memory usage
-        size_t currentUsage = getHeapUsage();
-        
-        // Check if adding a new object would exceed the maximum heap size
-        if (currentUsage >= maxHeap) {
-            // Try an emergency collection
-            collect();
-            
-            // Check again after collection
-            currentUsage = getHeapUsage();
-            if (currentUsage >= maxHeap) {
-                // Print memory stats before throwing
-                std::cout << "Memory limit reached! Current usage: " << currentUsage 
-                          << " bytes, Max heap: " << maxHeap << " bytes" << std::endl;
-                printStats();
-                throw std::runtime_error("Out of memory: max heap size reached");
-            }
-        }
-        
-        // Create the object
-        T* obj = new T(std::forward<Args>(args)...);
-        objects.push_back(obj);
-        
-        // Log memory usage
-        logger->logMemoryUsage(getObjectCount(), getHeapUsage(), initialHeap, maxHeap);
-        
-        return obj;
-    }
-
-    void decrementRefCount(Object* obj) {
-        if (obj && !isCollecting) {
-            obj->decrementRefCount();
-            if (obj->getRefCount() == 0) {
-                collect();
-            }
-        }
-    }
-
-    void mark(Object* obj);
-    void processMarkStack();
-    void collect();
-    bool shouldCollect() const;
-    void checkAndCollect();
-    
-    // Deadlock detection methods
-    bool isDeadlockDetected() const { return deadlockDetected.load(); }
-    void setDeadlockDetected(bool value) { deadlockDetected.store(value); }
-    void resetDeadlockDetection() { deadlockDetected.store(false); }
-
-    // Memory usage reporting
-    size_t getObjectCount() const { return objects.size(); }
-
-    // Improved heap usage calculation
-    size_t getHeapUsage() const { 
-        // Base usage from object pointers
-        size_t usage = objects.size() * sizeof(Object*);
-        
-        // Add estimated size of each object (use a more conservative estimate)
-        // This helps prevent overestimating memory usage which could trigger
-        // unnecessary collections or out-of-memory errors
-        usage += objects.size() * 32; // Reduced from 64 bytes per object
-        
-        // Add stack memory usage
-        usage += markStack.size() * sizeof(Object*);
-        
-        return usage;
-    }
-
-    size_t getInitialHeap() const { return initialHeap; }
-    size_t getMaxHeap() const { return maxHeap; }
-
-    void printStats() const {
-        std::cout << "[GC] Objects: " << getObjectCount()
-                  << ", Heap usage: " << getHeapUsage() << " bytes"
-                  << ", Initial heap: " << getInitialHeap() << " bytes"
-                  << ", Max heap: " << getMaxHeap() << " bytes" << std::endl;
-    }
-
-    // Memory logging control
-    void enableLogging() { logger->enable(); }
-    void disableLogging() { logger->disable(); }
-    bool isLoggingEnabled() const { return logger->isLoggingEnabled(); }
+    virtual std::string toString() const = 0;
 };
 
 template<typename T>
 class Ref {
 private:
     T* ptr;
-    GarbageCollector* gc;
 
 public:
-    Ref() : ptr(nullptr), gc(nullptr) {}
-    Ref(T* p, GarbageCollector* g) : ptr(p), gc(g) {
+    Ref() : ptr(nullptr) {}
+    
+    explicit Ref(T* p) : ptr(p) {
         if (ptr) ptr->incrementRefCount();
     }
     
-    ~Ref() { 
-        if (ptr) gc->decrementRefCount(ptr);
-    }
-    
-    Ref(const Ref& other) : ptr(other.ptr), gc(other.gc) {
+    Ref(const Ref& other) : ptr(other.ptr) {
         if (ptr) ptr->incrementRefCount();
     }
     
-    template<typename U>
-    Ref(const Ref<U>& other) : ptr(other.get()), gc(other.getGC()) {
+    Ref(Ref&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+    
+    template<typename U, typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
+    Ref(const Ref<U>& other) : ptr(other.get()) {
         if (ptr) ptr->incrementRefCount();
+    }
+    
+    ~Ref() {
+        if (ptr) ptr->decrementRefCount();
     }
     
     Ref& operator=(const Ref& other) {
         if (this != &other) {
-            if (ptr) gc->decrementRefCount(ptr);
+            if (ptr) ptr->decrementRefCount();
             ptr = other.ptr;
-            gc = other.gc;
             if (ptr) ptr->incrementRefCount();
         }
         return *this;
     }
     
-    template<typename U>
+    Ref& operator=(Ref&& other) noexcept {
+        if (this != &other) {
+            if (ptr) ptr->decrementRefCount();
+            ptr = other.ptr;
+            other.ptr = nullptr;
+        }
+        return *this;
+    }
+    
+    template<typename U, typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
     Ref& operator=(const Ref<U>& other) {
-        if (ptr) gc->decrementRefCount(ptr);
+        if (ptr) ptr->decrementRefCount();
         ptr = other.get();
-        gc = other.getGC();
         if (ptr) ptr->incrementRefCount();
         return *this;
     }
     
-    T* get() const { return ptr; }
     T& operator*() const { return *ptr; }
     T* operator->() const { return ptr; }
-    GarbageCollector* getGC() const { return gc; }
+    T* get() const { return ptr; }
     
-    explicit operator bool() const { return ptr != nullptr; }
-    
+    bool operator==(const Ref& other) const { return ptr == other.ptr; }
+    bool operator!=(const Ref& other) const { return ptr != other.ptr; }
     bool operator==(std::nullptr_t) const { return ptr == nullptr; }
     bool operator!=(std::nullptr_t) const { return ptr != nullptr; }
+    
+    explicit operator bool() const { return ptr != nullptr; }
 };
 
 } // namespace jeve 

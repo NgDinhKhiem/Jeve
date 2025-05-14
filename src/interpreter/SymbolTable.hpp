@@ -19,7 +19,11 @@ public:
         symbols[name] = value;
     }
 
-    Value get(const std::string& name) const {
+    void set(const std::string& name, Value&& value) {
+        symbols[name] = std::move(value);
+    }
+
+    const Value& get(const std::string& name) const {
         auto it = symbols.find(name);
         if (it != symbols.end()) {
             return it->second;
@@ -27,7 +31,8 @@ public:
         if (parent) {
             return parent->get(name);
         }
-        return Value();
+        static const Value empty;
+        return empty;
     }
 
     bool has(const std::string& name) const {

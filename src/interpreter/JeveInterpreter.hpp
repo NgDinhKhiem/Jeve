@@ -27,8 +27,9 @@ public:
 
     template<typename T, typename... Args>
     Ref<T> createObject(Args&&... args) {
+        // Create object only when needed during interpretation
         T* obj = gc.createObject<T>(std::forward<Args>(args)...);
-        return Ref<T>(obj, &gc);
+        return Ref<T>(obj);
     }
 
     GarbageCollector& getGC() { return gc; }

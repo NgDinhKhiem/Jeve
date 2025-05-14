@@ -27,9 +27,10 @@ private:
 
 public:
     NumberNode(int64_t val) : value(val) {}
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         return Value(value);
     }
+    std::string toString() const override { return "NumberNode"; }
 };
 
 class StringNode : public ASTNode {
@@ -38,9 +39,10 @@ private:
 
 public:
     StringNode(const std::string& val) : value(val) {}
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         return Value(value);
     }
+    std::string toString() const override { return "StringNode"; }
 };
 
 class IdentifierNode : public ASTNode {
@@ -54,6 +56,7 @@ public:
     }
 
     const std::string& getName() const { return name; }
+    std::string toString() const override { return "IdentifierNode"; }
 };
 
 class BinaryOpNode : public ASTNode {
@@ -162,6 +165,7 @@ public:
         
         throw std::runtime_error("Invalid operation between types");
     }
+    std::string toString() const override { return "BinaryOpNode"; }
 };
 
 class PrintNode : public ASTNode {
@@ -206,6 +210,8 @@ public:
         }
         return result;
     }
+
+    std::string toString() const override { return "PrintNode"; }
 };
 
 class StatementNode : public ASTNode {
@@ -227,13 +233,15 @@ public:
 
     Value evaluate(SymbolTable& scope) override {
         Value result = statement->evaluate(scope);
-        if (next) {
+        if (next.get() != nullptr) {
             result = next->evaluate(scope);
         }
         return result;
     }
 
     GarbageCollector* getGC() const { return gc; }
+
+    std::string toString() const override { return "StatementNode"; }
 };
 
 class BlockNode : public ASTNode {
@@ -246,8 +254,8 @@ public:
     BlockNode(GarbageCollector* g) : first(), last(), gc(g) {}
 
     void addStatement(Ref<ASTNode> stmt) {
-        Ref<StatementNode> node(new StatementNode(stmt, gc), gc);
-        if (!first) {
+        Ref<StatementNode> node(new StatementNode(stmt, gc));
+        if (first.get() == nullptr) {
             first = node;
             last = node;
         } else {
@@ -257,11 +265,13 @@ public:
     }
 
     Value evaluate(SymbolTable& scope) override {
-        if (!first) {
+        if (first.get() == nullptr) {
             return Value();
         }
         return first->evaluate(scope);
     }
+
+    std::string toString() const override { return "BlockNode"; }
 };
 
 class AssignmentNode : public ASTNode {
@@ -296,6 +306,8 @@ public:
         scope.set(name, value);
         return value;
     }
+
+    std::string toString() const override { return "AssignmentNode"; }
 };
 
 class InputNode : public ASTNode {
@@ -305,29 +317,19 @@ private:
 public:
     InputNode(const std::string& t = "") : type(t) {}
 
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         std::string input;
         std::getline(std::cin, input);
         
         if (type == "int") {
             try {
-                size_t pos;
-                int64_t num = std::stoll(input, &pos);
-                if (pos == input.length()) {
-                    return Value(num);
-                }
-                throw std::runtime_error("Invalid integer input");
+                return Value(std::stoll(input));
             } catch (...) {
                 throw std::runtime_error("Invalid integer input");
             }
         } else if (type == "float") {
             try {
-                size_t pos;
-                double num = std::stod(input, &pos);
-                if (pos == input.length()) {
-                    return Value(num);
-                }
-                throw std::runtime_error("Invalid float input");
+                return Value(std::stod(input));
             } catch (...) {
                 throw std::runtime_error("Invalid float input");
             }
@@ -337,8 +339,10 @@ public:
             throw std::runtime_error("Invalid boolean input");
         }
         
-        return Value(input);  // Default to string
+        return Value(input);
     }
+
+    std::string toString() const override { return "InputNode"; }
 };
 
 class ConcatNode : public ASTNode {
@@ -352,12 +356,10 @@ public:
     Value evaluate(SymbolTable& scope) override {
         Value lval = left->evaluate(scope);
         Value rval = right->evaluate(scope);
-        
-        std::string lstr = lval.toString();
-        std::string rstr = rval.toString();
-        
-        return Value(lstr + rstr);
+        return Value(lval.toString() + rval.toString());
     }
+
+    std::string toString() const override { return "ConcatNode"; }
 };
 
 class IfNode : public ASTNode {
@@ -372,17 +374,15 @@ public:
 
     Value evaluate(SymbolTable& scope) override {
         Value cond = condition->evaluate(scope);
-        if (cond.getType() != Value::Type::Boolean) {
-            throw std::runtime_error("Condition must be a boolean");
-        }
-        
-        if (cond.getBoolean()) {
+        if (cond.toBoolean()) {
             return thenBlock->evaluate(scope);
-        } else if (elseBlock) {
+        } else if (elseBlock.get() != nullptr) {
             return elseBlock->evaluate(scope);
         }
         return Value();
     }
+
+    std::string toString() const override { return "IfNode"; }
 };
 
 class WhileNode : public ASTNode {
@@ -410,6 +410,8 @@ public:
         }
         return result;
     }
+
+    std::string toString() const override { return "WhileNode"; }
 };
 
 class FunctionCallNode : public ASTNode {
@@ -437,6 +439,8 @@ public:
         }
         throw std::runtime_error("Unknown function: " + name);
     }
+
+    std::string toString() const override { return "FunctionCallNode"; }
 };
 
 class ArrayNode : public ASTNode {
@@ -465,6 +469,8 @@ public:
             return Value::createEmptyArray();
         }
     }
+
+    std::string toString() const override { return "ArrayNode"; }
 };
 
 class ArrayAccessNode : public ASTNode {
@@ -499,6 +505,8 @@ public:
             throw std::runtime_error("Array index out of bounds: " + std::to_string(idx));
         }
     }
+
+    std::string toString() const override { return "ArrayAccessNode"; }
 };
 
 class ForNode : public ASTNode {
@@ -517,33 +525,39 @@ public:
     Value evaluate(SymbolTable& scope) override {
         Value startVal = start->evaluate(scope);
         Value endVal = end->evaluate(scope);
+        Value stepVal = step.get() != nullptr ? step->evaluate(scope) : Value(static_cast<int64_t>(1));
         
         if (startVal.getType() != Value::Type::Integer || 
-            endVal.getType() != Value::Type::Integer) {
-            throw std::runtime_error("For loop bounds must be integers");
+            endVal.getType() != Value::Type::Integer || 
+            stepVal.getType() != Value::Type::Integer) {
+            throw std::runtime_error("For loop requires integer values");
         }
         
-        int64_t stepVal = 1;
-        if (step) {
-            Value stepValue = step->evaluate(scope);
-            if (stepValue.getType() != Value::Type::Integer) {
-                throw std::runtime_error("For loop step must be an integer");
-            }
-            stepVal = stepValue.getInteger();
-            if (stepVal == 0) {
-                throw std::runtime_error("For loop step cannot be zero");
-            }
+        int64_t start = startVal.getInteger();
+        int64_t end = endVal.getInteger();
+        int64_t step = stepVal.getInteger();
+        
+        if (step == 0) {
+            throw std::runtime_error("For loop step cannot be zero");
         }
         
         Value result;
-        for (int64_t i = startVal.getInteger(); 
-             (stepVal > 0) ? (i < endVal.getInteger()) : (i > endVal.getInteger());
-             i += stepVal) {
-            scope.set(varName, Value(i));
-            result = body->evaluate(scope);
+        if (step > 0) {
+            for (int64_t i = start; i <= end; i += step) {
+                scope.set(varName, Value(i));
+                result = body->evaluate(scope);
+            }
+        } else {
+            for (int64_t i = start; i >= end; i += step) {
+                scope.set(varName, Value(i));
+                result = body->evaluate(scope);
+            }
         }
+        
         return result;
     }
+
+    std::string toString() const override { return "ForNode"; }
 };
 
 class SmartLoopNode : public ASTNode {
@@ -573,6 +587,8 @@ public:
         }
         return result;
     }
+
+    std::string toString() const override { return "SmartLoopNode"; }
 };
 
 class ArrayAssignmentNode : public ASTNode {
@@ -629,6 +645,8 @@ public:
             throw std::runtime_error("Array index out of bounds: " + std::to_string(idx));
         }
     }
+
+    std::string toString() const override { return "ArrayAssignmentNode"; }
 };
 
 class PropertyAccessNode : public ASTNode {
@@ -654,6 +672,8 @@ public:
         
         throw std::runtime_error("Unknown property: " + property);
     }
+
+    std::string toString() const override { return "PropertyAccessNode"; }
 };
 
 // Add DebugGCNode class to print memory usage statistics
@@ -664,12 +684,16 @@ private:
 public:
     DebugGCNode(GarbageCollector* gc = nullptr) : gc(gc) {}
 
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         if (gc) {
             gc->printStats();
+        } else {
+            std::cout << "[DebugGC] Garbage collector not available" << std::endl;
         }
-        return Value(); // Return null
+        return Value();
     }
+
+    std::string toString() const override { return "DebugGCNode"; }
 };
 
 // Add CleanGCNode class to force garbage collection
@@ -680,12 +704,14 @@ private:
 public:
     CleanGCNode(GarbageCollector* gc = nullptr) : gc(gc) {}
 
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         if (gc) {
-            gc->collect(); // Force immediate garbage collection
+            gc->collect();
         }
-        return Value(); // Return null
+        return Value();
     }
+
+    std::string toString() const override { return "CleanGCNode"; }
 };
 
 class UnaryOpNode : public ASTNode {
@@ -696,19 +722,22 @@ private:
 public:
     UnaryOpNode(Ref<ASTNode> op, const std::string& o)
         : operand(op), op(o) {}
-    
+
     Value evaluate(SymbolTable& scope) override {
         Value val = operand->evaluate(scope);
-        
-        if (op == "!") {
-            if (val.getType() == Value::Type::Boolean) {
-                return Value(!val.getBoolean());
+        if (op == "-") {
+            if (val.getType() == Value::Type::Integer) {
+                return Value(-val.getInteger());
+            } else if (val.getType() == Value::Type::Float) {
+                return Value(-val.getFloat());
             }
-            throw std::runtime_error("Unary ! operator requires boolean operand");
+        } else if (op == "!") {
+            return Value(!val.toBoolean());
         }
-        
-        throw std::runtime_error("Invalid unary operator: " + op);
+        throw std::runtime_error("Invalid unary operation");
     }
+
+    std::string toString() const override { return "UnaryOpNode"; }
 };
 
 class BooleanNode : public ASTNode {
@@ -718,9 +747,11 @@ private:
 public:
     BooleanNode(bool val) : value(val) {}
 
-    Value evaluate(SymbolTable& scope) override {
+    Value evaluate(SymbolTable&) override {
         return Value(value);
     }
+
+    std::string toString() const override { return "BooleanNode"; }
 };
 
 } // namespace jeve 
