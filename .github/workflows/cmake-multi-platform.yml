@@ -6,9 +6,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: write
-  id-token: write
+env:
+  BUILD_DIR: build
 
 jobs:
   build:
@@ -18,9 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -30,63 +26,36 @@ jobs:
           - os: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
-
-    env:
-      BUILD_DIR: ${{ github.workspace }}/build
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
 
-      # Configure CMake on Windows (PowerShell)
-      - name: Configure CMake (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          cmake -B $env:BUILD_DIR -S ${{ github.workspace }} `
-            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
-            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
-            -DCMAKE_BUILD_TYPE=Release
-
-      # Configure CMake on Linux/macOS (bash)
-      - name: Configure CMake (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Configure CMake
         shell: bash
         run: |
-          cmake -B "$BUILD_DIR" -S "${{ github.workspace }}" \
+          cmake -B $BUILD_DIR \
             -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -S .
 
-      # Build on Windows (PowerShell)
-      - name: Build (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: cmake --build $env:BUILD_DIR --config Release
-
-      # Build on Linux/macOS (bash)
-      - name: Build (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Build
         shell: bash
-        run: cmake --build "$BUILD_DIR" --config Release
+        run: cmake --build $BUILD_DIR --config Release
 
-      # Test on Windows (PowerShell)
-      - name: Test (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: ctest --build-config Release --test-dir $env:BUILD_DIR
-
-      # Test on Linux/macOS (bash)
-      - name: Test (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Test
         shell: bash
-        run: ctest --build-config Release --test-dir "$BUILD_DIR"
+        run: |
+          cd $BUILD_DIR
+          ctest --build-config Release
 
-      # Upload artifact on Ubuntu only (example)
-      - name: Upload build artifact (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v3
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: build-ubuntu-${{ matrix.c_compiler }}
+          name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
           path: ${{ env.BUILD_DIR }}
 
   release:
@@ -97,18 +66,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build artifact (Ubuntu GCC)
-        uses: actions/download-artifact@v3
+      - name: Download Linux Build Artifact (example)
+        uses: actions/download-artifact@v4
         with:
-          name: build-ubuntu-gcc
+          name: build-ubuntu-latest-gcc
           path: build
 
-      - name: Archive build files
-        run: |
-          cd build
-          zip -r ../build_artifact.zip .
+      # You can add steps to collect other platform artifacts similarly
 
-      - name: Create or Update Tag
+      - name: Create Release Tag
         uses: jimeh/update-tags-action@v1
         with:
           tags: |
@@ -123,9 +89,11 @@ jobs:
         with:
           tag_name: v1.0.0
           release_name: "Release 1.0.0"
-          body: "Release of Jeve"
+          body: "Release build for Jeve"
           draft: false
           prerelease: false
-          files: build_artifact.zip
+          files: |
+            build/**/*
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
