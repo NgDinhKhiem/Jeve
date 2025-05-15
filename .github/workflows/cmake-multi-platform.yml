@@ -123,7 +123,16 @@ jobs:
         with:
           name: build-windows-latest-cl
           path: all-builds/windows-cl
-
+          
+      - name: Create or Update Tag
+        uses: jimeh/update-tags-action@v1
+        with:
+          tags: |
+            v1.0.0
+          when_exists: update
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -137,3 +146,4 @@ jobs:
             all-builds/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+  
