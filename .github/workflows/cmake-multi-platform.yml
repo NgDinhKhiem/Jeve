@@ -1,14 +1,13 @@
-name: CMake Multi-Platform Build and Release
+name: CMake Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: write
-  security-events: write
   id-token: write
 
 jobs:
@@ -45,8 +44,7 @@ jobs:
       - name: Set reusable strings
         id: strings
         shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
       - name: Configure CMake
         run: >
@@ -63,11 +61,23 @@ jobs:
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
         run: ctest --build-config ${{ matrix.build_type }}
 
-      - name: Upload build artifact
+      - name: Rename binary for clarity
+        shell: bash
+        run: |
+          if [ -f build/jeve ]; then
+            mv build/jeve build/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+          fi
+          if [ -f build/Release/jeve.exe ]; then
+            mv build/Release/jeve.exe build/Release/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
+          fi
+
+      - name: Upload jeve binary
         uses: actions/upload-artifact@v4
         with:
           name: jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
-          path: ${{ steps.strings.outputs.build-output-dir }}/bin/*  # Replace with actual output path if needed
+          path: |
+            build/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+            build/Release/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
 
   release:
     needs: build
@@ -87,14 +97,14 @@ jobs:
           tag_name: v1.0.0
           release_name: "Jeve Multi-Platform Release 1.0.0"
           body: |
-            🔧 Built on:
+            🔧 Compiled for:
             - Windows (MSVC)
-            - Linux (GCC and Clang)
+            - Linux (GCC, Clang)
 
-            🧪 Includes all compiled binaries per platform/compiler.
+            🧪 Binaries included per OS and compiler.
           draft: false
           prerelease: false
           files: |
-            **/*
+            jeve-*/jeve-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
