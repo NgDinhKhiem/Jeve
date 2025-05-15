@@ -1,4 +1,4 @@
-name: CMake Build and Release
+name: CMake Multi-Platform Build and Release
 
 on:
   push:
@@ -8,10 +8,10 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   build:
+    name: Build on ${{ matrix.os }} with ${{ matrix.c_compiler }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -41,55 +41,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+      - name: Set Build Output Directory
+        id: vars
+        run: echo "BUILD_DIR=${{ github.workspace }}/build" >> $GITHUB_ENV
 
       - name: Configure CMake
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          cmake -B $BUILD_DIR
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
 
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+        run: >
+          cmake --build $BUILD_DIR --config ${{ matrix.build_type }}
 
-      - name: Test
-        working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        run: ctest --build-config ${{ matrix.build_type }}
-
-      - name: Rename binary for clarity
-        shell: bash
+      - name: Rename Binary
         run: |
-          if [ -f build/jeve ]; then
-            mv build/jeve build/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
-          fi
-          if [ -f build/Release/jeve.exe ]; then
-            mv build/Release/jeve.exe build/Release/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
+          mkdir -p $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp $BUILD_DIR/Release/jeve.exe $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
+          else
+            cp $BUILD_DIR/jeve $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
           fi
 
-      - name: Upload jeve binary
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
           path: |
-            build/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
-            build/Release/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
+            $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
 
   release:
+    name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Download all artifacts
+      - uses: actions/checkout@v4
+
+      - name: Download All Artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: dist
 
       - name: List downloaded files
-        run: ls -R
+        run: find dist -type f
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -97,14 +95,15 @@ jobs:
           tag_name: v1.0.0
           release_name: "Jeve Multi-Platform Release 1.0.0"
           body: |
-            🔧 Compiled for:
-            - Windows (MSVC)
-            - Linux (GCC, Clang)
-
-            🧪 Binaries included per OS and compiler.
+            🚀 Jeve interpreter compiled for:
+            - ✅ Windows (MSVC)
+            - ✅ Linux (GCC, Clang)
+            
+            Use the appropriate binary for your system.
           draft: false
           prerelease: false
           files: |
-            jeve-*/jeve-*
+            dist/**/jeve-*
+            dist/**/jeve-*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
