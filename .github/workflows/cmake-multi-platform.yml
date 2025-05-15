@@ -20,40 +20,67 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-            shell: bash
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            shell: bash
           - os: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
-            shell: bash
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-            shell: pwsh
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure CMake
-        shell: ${{ matrix.shell }}
+      # Configure CMake for Linux/macOS (bash shell)
+      - name: Configure CMake (bash)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
-          cmake -B ${{ env.BUILD_DIR }} `
+          cmake -B $BUILD_DIR \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -S .
+
+      # Configure CMake for Windows (PowerShell)
+      - name: Configure CMake (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -B $env:BUILD_DIR `
             -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
             -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
             -DCMAKE_BUILD_TYPE=Release `
             -S .
 
-      - name: Build
-        shell: ${{ matrix.shell }}
-        run: cmake --build ${{ env.BUILD_DIR }} --config Release
+      # Build for Linux/macOS (bash)
+      - name: Build (bash)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: cmake --build $BUILD_DIR --config Release
 
-      - name: Test
-        shell: ${{ matrix.shell }}
+      # Build for Windows (PowerShell)
+      - name: Build (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cmake --build $env:BUILD_DIR --config Release
+
+      # Test for Linux/macOS (bash)
+      - name: Test (bash)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
-          cd ${{ env.BUILD_DIR }}
+          cd $BUILD_DIR
+          ctest --build-config Release
+
+      # Test for Windows (PowerShell)
+      - name: Test (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Location $env:BUILD_DIR
           ctest --build-config Release
 
       - name: Upload Build Artifacts
