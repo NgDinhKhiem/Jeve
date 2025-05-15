@@ -37,15 +37,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure CMake
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Configure CMake on Windows (PowerShell)
+      - name: Configure CMake (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           cmake -B $env:BUILD_DIR -S ${{ github.workspace }} `
             -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
             -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
             -DCMAKE_BUILD_TYPE=Release
-        if: matrix.os == 'windows-latest'
 
+      # Configure CMake on Linux/macOS (bash)
       - name: Configure CMake (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
@@ -55,31 +57,36 @@ jobs:
             -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
             -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
-        run: cmake --build $env:BUILD_DIR --config Release
+      # Build on Windows (PowerShell)
+      - name: Build (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: cmake --build $env:BUILD_DIR --config Release
 
+      # Build on Linux/macOS (bash)
       - name: Build (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: cmake --build "$BUILD_DIR" --config Release
 
-      - name: Test
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
-        run: ctest --build-config Release --test-dir $env:BUILD_DIR
+      # Test on Windows (PowerShell)
+      - name: Test (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ctest --build-config Release --test-dir $env:BUILD_DIR
 
+      # Test on Linux/macOS (bash)
       - name: Test (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: ctest --build-config Release --test-dir "$BUILD_DIR"
 
-      - name: Upload build artifacts
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+      # Upload artifact on Ubuntu only (example)
+      - name: Upload build artifact (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v3
         with:
-          name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
+          name: build-ubuntu-${{ matrix.c_compiler }}
           path: ${{ env.BUILD_DIR }}
 
   release:
@@ -90,11 +97,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build artifact (Ubuntu)
-        if: ${{ needs.build.outputs.matrix.os == 'ubuntu-latest' }}
+      - name: Download build artifact (Ubuntu GCC)
         uses: actions/download-artifact@v3
         with:
-          name: build-ubuntu-latest-gcc
+          name: build-ubuntu-gcc
           path: build
 
       - name: Archive build files
