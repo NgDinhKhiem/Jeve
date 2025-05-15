@@ -11,6 +11,7 @@ Value PrintNode::evaluate(SymbolTable& scope) {
 }
 
 Value InputNode::evaluate(SymbolTable& scope) {
+    (void)scope;
     std::string input;
     std::getline(std::cin, input);
     
@@ -34,9 +35,9 @@ Value InputNode::evaluate(SymbolTable& scope) {
     
     // Handle explicit type conversion
     if (type == "int") {
-        return Value(std::stoll(input));
+        return Value(static_cast<int64_t>(std::stod(input)));
     } else if (type == "float") {
-        return Value(std::stod(input));
+        return Value(static_cast<float>(std::stod(input)));
     } else if (type == "bool") {
         return Value(input == "true");
     } else if (type == "string") {
