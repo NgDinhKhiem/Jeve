@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
         include:
@@ -30,6 +30,9 @@ jobs:
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+          - os: macos-latest
+            c_compiler: clang
+            cpp_compiler: clang++
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -37,33 +40,36 @@ jobs:
             c_compiler: clang
           - os: ubuntu-latest
             c_compiler: cl
+          - os: macos-latest
+            c_compiler: gcc
+          - os: macos-latest
+            c_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set Build Output Directory
-        id: vars
         run: echo "BUILD_DIR=${{ github.workspace }}/build" >> $GITHUB_ENV
 
       - name: Configure CMake
-        run: >
-          cmake -B $BUILD_DIR
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
+        run: |
+          cmake -B "${{ env.BUILD_DIR }}" \
+                -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+                -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -S "${{ github.workspace }}"
 
       - name: Build
-        run: >
-          cmake --build $BUILD_DIR --config ${{ matrix.build_type }}
+        run: cmake --build "${{ env.BUILD_DIR }}" --config ${{ matrix.build_type }}
 
       - name: Rename Binary
+        shell: bash
         run: |
-          mkdir -p $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+          mkdir -p "${{ env.BUILD_DIR }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}"
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            cp $BUILD_DIR/Release/jeve.exe $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe
+            cp "${{ env.BUILD_DIR }}/Release/jeve.exe" "${{ env.BUILD_DIR }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}.exe"
           else
-            cp $BUILD_DIR/jeve $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+            cp "${{ env.BUILD_DIR }}/jeve" "${{ env.BUILD_DIR }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}"
           fi
 
       - name: Upload Artifact
@@ -71,7 +77,7 @@ jobs:
         with:
           name: jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
           path: |
-            $BUILD_DIR/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
+            ${{ env.BUILD_DIR }}/jeve-${{ matrix.os }}-${{ matrix.c_compiler }}
 
   release:
     name: Create GitHub Release
@@ -98,7 +104,8 @@ jobs:
             🚀 Jeve interpreter compiled for:
             - ✅ Windows (MSVC)
             - ✅ Linux (GCC, Clang)
-            
+            - ✅ macOS (Clang)
+
             Use the appropriate binary for your system.
           draft: false
           prerelease: false
