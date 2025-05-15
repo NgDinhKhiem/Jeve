@@ -1,4 +1,4 @@
-[![CMake Multi-Platform Build and Release](https://github.com/NgDinhKhiem/Jeve/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main&event=status)](https://github.com/NgDinhKhiem/Jeve/actions/workflows/cmake-multi-platform.yml)
+[![CMake Multi-Platform Build and Release](https://github.com/NgDinhKhiem/Jeve/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/NgDinhKhiem/Jeve/actions/workflows/cmake-multi-platform.yml)
 # Jeve
 
 Jeve is a lightweight, educational scripting language and interpreter written in modern C++. It was developed as part of an undergraduate course project and is designed to be easy to read, extend, and experiment with. Jeve supports variables, arrays, user-defined functions, control flow, and basic type annotations.
