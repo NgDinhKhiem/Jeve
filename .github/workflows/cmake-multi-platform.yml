@@ -74,17 +74,15 @@ jobs:
 
       # You can add steps to collect other platform artifacts similarly
 
-      - name: Create or Update Tag
+      - name: Create or Update Tag v1.0.0
         uses: jimeh/update-tags-action@v1
         with:
-          tags: |
-            v1.0.0
+          tags: v1.0.0
           when_exists: update
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-      - name: Create Release
-        id: create_release
+      - name: Create Release v1.0.0
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
@@ -92,8 +90,6 @@ jobs:
           body: "Release of Jeve version 1.0.0"
           draft: false
           prerelease: false
-          files: |
-            build/**/*
-
+          files: ./all-builds/**
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
