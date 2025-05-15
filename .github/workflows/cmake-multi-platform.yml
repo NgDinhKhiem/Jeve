@@ -42,28 +42,67 @@ jobs:
         shell: bash
         run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Configure CMake
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Configure CMake on Linux/macOS (bash)
+      - name: Configure CMake on Linux/macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cmake -B "${{ steps.strings.outputs.build-output-dir }}" -S "${{ github.workspace }}" \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      # Configure CMake on Windows (PowerShell)
+      - name: Configure CMake on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           cmake -B "${{ steps.strings.outputs.build-output-dir }}" -S "${{ github.workspace }}" `
-                -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
-                -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
-                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
+            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
-      - name: Build
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Build on Linux/macOS
+      - name: Build on Linux/macOS
+        if: runner.os != 'Windows'
+        shell: bash
         run: cmake --build "${{ steps.strings.outputs.build-output-dir }}" --config ${{ matrix.build_type }}
 
-      - name: Test
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Build on Windows
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cmake --build "${{ steps.strings.outputs.build-output-dir }}" --config ${{ matrix.build_type }}
+
+      # Test on Linux/macOS
+      - name: Test on Linux/macOS
+        if: runner.os != 'Windows'
+        shell: bash
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
         run: ctest --build-config ${{ matrix.build_type }}
 
-      - name: List build directory contents
-        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+      # Test on Windows
+      - name: Test on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        run: ctest --build-config ${{ matrix.build_type }}
+
+      # List build directory contents on Linux/macOS
+      - name: List build directory contents on Linux/macOS
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           echo "Contents of build directory:"
           ls -la "${{ steps.strings.outputs.build-output-dir }}"
+
+      # List build directory contents on Windows
+      - name: List build directory contents on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "Contents of build directory:"
+          Get-ChildItem -Path "${{ steps.strings.outputs.build-output-dir }}" -Recurse
 
   release:
     needs: build
@@ -72,11 +111,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
 
       - name: Create or Update Tag
         uses: jimeh/update-tags-action@v1
