@@ -32,7 +32,6 @@ Value ArrayAccessNode::evaluate(SymbolTable& scope) {
         throw std::runtime_error("Array index out of bounds");
     }
     
-    std::cout << "DEBUG: Exiting ArrayAccessNode::evaluate" << std::endl;
     return elements[index];
 }
 
