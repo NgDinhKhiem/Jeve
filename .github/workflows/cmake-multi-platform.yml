@@ -94,55 +94,64 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Create directory for collected artifacts
-        run: mkdir all-builds
+    - name: Create directory for collected artifacts
+      run: mkdir -p release-files
 
-      - name: Download Ubuntu GCC artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-ubuntu-latest-gcc
-          path: all-builds/ubuntu-gcc
+    # Download artifacts from each platform
+    - name: Download Ubuntu GCC artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-ubuntu-latest-gcc
+        path: temp/ubuntu-gcc
 
-      - name: Download Ubuntu Clang artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-ubuntu-latest-clang
-          path: all-builds/ubuntu-clang
+    - name: Download Ubuntu Clang artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-ubuntu-latest-clang
+        path: temp/ubuntu-clang
 
-      - name: Download macOS Clang artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-macos-latest-clang
-          path: all-builds/macos-clang
+    - name: Download macOS Clang artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-macos-latest-clang
+        path: temp/macos-clang
 
-      - name: Download Windows MSVC artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-windows-latest-cl
-          path: all-builds/windows-cl
-          
-      - name: Create or Update Tag
-        uses: jimeh/update-tags-action@v1
-        with:
-          tags: |
-            v1.0.0
-          when_exists: update
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v1.0.0
-          release_name: "Release 1.0.0"
-          body: "Release of CafeteriaManagerSystem-Backend-1.0-SNAPSHOT"
-          draft: false
-          prerelease: false
-          files: |
-            all-builds/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+    - name: Download Windows MSVC artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-windows-latest-cl
+        path: temp/windows-cl
+
+    # Copy and rename only jeve files
+    - name: Prepare jeve build files
+      shell: bash
+      run: |
+        mkdir -p release-files
+        find temp/ubuntu-gcc -type f -name 'jeve*' -exec cp {} release-files/jeve-ubuntu-gcc \;
+        find temp/ubuntu-clang -type f -name 'jeve*' -exec cp {} release-files/jeve-ubuntu-clang \;
+        find temp/macos-clang -type f -name 'jeve*' -exec cp {} release-files/jeve-macos-clang \;
+        find temp/windows-cl -type f -name 'jeve*' -exec cp {} release-files/jeve-windows-cl.exe \;
+
+    - name: Create or Update Tag
+      uses: jimeh/update-tags-action@v1
+      with:
+        tags: v1.0.0
+        when_exists: update
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.0
+        release_name: "Release 1.0.0"
+        body: "Release of CafeteriaManagerSystem-Backend-1.0-SNAPSHOT"
+        draft: false
+        prerelease: false
+        files: |
+          release-files/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
