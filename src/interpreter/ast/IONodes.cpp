@@ -25,7 +25,7 @@ Value InputNode::evaluate(SymbolTable& scope) {
             if (input.find('.') != std::string::npos) {
                 return Value(std::stod(input));
             } else {
-                return Value(std::stoll(input));
+                return Value(static_cast<int64_t>(std::stoll(input)));
             }
         } catch (...) {
             // If conversion fails, treat as string
