@@ -72,28 +72,14 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-        with:
-          path: dist
 
       - name: List downloaded files
-        run: ls -R dist
-
-      - name: Create or Update Tag
-        uses: jimeh/update-tags-action@v1
-        with:
-          tags: |
-            v1.0.0
-          when_exists: update
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ls -R
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -101,13 +87,14 @@ jobs:
           tag_name: v1.0.0
           release_name: "Jeve Multi-Platform Release 1.0.0"
           body: |
-            This is an automated release of Jeve built across multiple platforms:
+            🔧 Built on:
             - Windows (MSVC)
-            - Linux (GCC & Clang)
+            - Linux (GCC and Clang)
 
-            Includes compiled binaries from all platforms.
+            🧪 Includes all compiled binaries per platform/compiler.
           draft: false
           prerelease: false
-          files: dist/**/*
+          files: |
+            **/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
