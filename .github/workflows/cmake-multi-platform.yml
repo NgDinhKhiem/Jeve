@@ -20,36 +20,40 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            shell: bash
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+            shell: bash
           - os: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
+            shell: bash
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
+            shell: pwsh
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure CMake
-        shell: bash
+        shell: ${{ matrix.shell }}
         run: |
-          cmake -B $BUILD_DIR \
-            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-            -DCMAKE_BUILD_TYPE=Release \
+          cmake -B ${{ env.BUILD_DIR }} `
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
+            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
+            -DCMAKE_BUILD_TYPE=Release `
             -S .
 
       - name: Build
-        shell: bash
-        run: cmake --build $BUILD_DIR --config Release
+        shell: ${{ matrix.shell }}
+        run: cmake --build ${{ env.BUILD_DIR }} --config Release
 
       - name: Test
-        shell: bash
+        shell: ${{ matrix.shell }}
         run: |
-          cd $BUILD_DIR
+          cd ${{ env.BUILD_DIR }}
           ctest --build-config Release
 
       - name: Upload Build Artifacts
@@ -66,31 +70,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Linux Build Artifact (example)
+      - name: Create directory for collected artifacts
+        run: mkdir all-builds
+
+      - name: Download Ubuntu GCC artifact
         uses: actions/download-artifact@v4
         with:
           name: build-ubuntu-latest-gcc
-          path: build
+          path: all-builds/ubuntu-gcc
 
-      # You can add steps to collect other platform artifacts similarly
+      - name: Download Ubuntu Clang artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-ubuntu-latest-clang
+          path: all-builds/ubuntu-clang
+
+      - name: Download macOS Clang artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-macos-latest-clang
+          path: all-builds/macos-clang
+
+      - name: Download Windows MSVC artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-windows-latest-cl
+          path: all-builds/windows-cl
+
       - name: Create or Update Tag
         uses: jimeh/update-tags-action@v1
         with:
-          tags: |
-            v1.0.0
+          tags: v1.0.0
           when_exists: update
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
-          release_name: "Release 1.0.0.0"
+          release_name: "Release 1.0.0"
           body: "Release of CafeteriaManagerSystem-Backend-1.0-SNAPSHOT"
           draft: false
           prerelease: false
-          files: ./all-builds/**
+          files: |
+            all-builds/**/*
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
