@@ -1,10 +1,10 @@
-name: CMake Build and Publish Release
+name: CMake Multi-Platform Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: write
@@ -43,22 +43,27 @@ jobs:
         run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
       - name: Configure CMake
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
         run: |
-          cmake -B "${{ steps.strings.outputs.build-output-dir }}" \
-                -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-                -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                -S "${{ github.workspace }}"
+          cmake -B "${{ steps.strings.outputs.build-output-dir }}" -S "${{ github.workspace }}" `
+                -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
+                -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
+                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
         run: cmake --build "${{ steps.strings.outputs.build-output-dir }}" --config ${{ matrix.build_type }}
 
       - name: Test
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
         run: ctest --build-config ${{ matrix.build_type }}
 
-      - name: List build output files
-        run: ls -R "${{ steps.strings.outputs.build-output-dir }}"
+      - name: List build directory contents
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+        run: |
+          echo "Contents of build directory:"
+          ls -la "${{ steps.strings.outputs.build-output-dir }}"
 
   release:
     needs: build
@@ -72,7 +77,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-artifacts
-          path: ./build
 
       - name: Create or Update Tag
         uses: jimeh/update-tags-action@v1
@@ -89,10 +93,16 @@ jobs:
         with:
           tag_name: v1.0.0
           release_name: "Release 1.0.0"
-          body: "Automated release of Jeve"
+          body: "Release of Jeve"
           draft: false
           prerelease: false
           files: |
-            build/**/*
+            build/*.exe
+            build/*.dll
+            build/*.so
+            build/*.dylib
+            build/*.a
+            build/*.lib
+            build/*.out
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
