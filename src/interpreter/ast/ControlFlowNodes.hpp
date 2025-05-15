@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ASTNode.hpp"
+#include "../ASTNode.hpp"
 #include <string>
 
 namespace jeve {
@@ -83,6 +83,24 @@ public:
 
     Value evaluate(SymbolTable& scope) override;
     std::string toString() const override { return "ForNode"; }
+};
+
+class ReturnException : public std::exception {
+    Value value;
+public:
+    ReturnException(const Value& v) : value(v) {}
+    const Value& getValue() const { return value; }
+};
+
+class ReturnNode : public ASTNode {
+    Ref<ASTNode> expr;
+public:
+    ReturnNode(Ref<ASTNode> e) : expr(e) {}
+    Value evaluate(SymbolTable& scope) override {
+        Value v = expr->evaluate(scope);
+        throw ReturnException(v);
+    }
+    std::string toString() const override { return "ReturnNode"; }
 };
 
 } // namespace jeve 

@@ -19,7 +19,10 @@ set(SOURCES
     src/interpreter/GarbageCollector.cpp
     src/interpreter/ast/OperatorNodes.cpp
     src/interpreter/ast/ControlFlowNodes.cpp
-    src/interpreter/ast/ArrayFunctionNodes.cpp
+    src/interpreter/ast/ArrayNodes.cpp
+    src/interpreter/ast/FunctionNodes.cpp
+    src/interpreter/ast/IONodes.cpp
+    src/interpreter/ast/GCNodes.cpp
 )
 
 # Add header files
@@ -34,7 +37,10 @@ set(HEADERS
     src/interpreter/ast/BasicNodes.hpp
     src/interpreter/ast/OperatorNodes.hpp
     src/interpreter/ast/ControlFlowNodes.hpp
-    src/interpreter/ast/ArrayFunctionNodes.hpp
+    src/interpreter/ast/ArrayNodes.hpp
+    src/interpreter/ast/FunctionNodes.hpp
+    src/interpreter/ast/IONodes.hpp
+    src/interpreter/ast/GCNodes.hpp
     src/interpreter/ast/AssignmentNode.hpp
     src/interpreter/ast/ConcatNode.hpp
     src/interpreter/ast/PropertyAccessNode.hpp
@@ -48,7 +54,7 @@ add_executable(jeve ${SOURCES})
 target_include_directories(jeve PRIVATE src)
 
 # Install target
-install(TARGETS jeve DESTINATION bin)
+install(TARGETS jeve DESTINATION bin) 
 
 # Add AddressSanitizer flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -g")

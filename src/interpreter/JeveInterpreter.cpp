@@ -6,7 +6,17 @@
 #include <unordered_map>
 #include <vector>
 #include "ASTNode.hpp"
-#include "ArrayNode.hpp"
+#include "ast/ArrayNodes.hpp"
+#include "ast/ControlFlowNodes.hpp"
+#include "ast/OperatorNodes.hpp"
+#include "ast/BasicNodes.hpp"
+#include "ast/SmartLoopNode.hpp"
+#include "ast/AssignmentNode.hpp"
+#include "ast/ConcatNode.hpp"
+#include "ast/PropertyAccessNode.hpp"
+#include "ast/FunctionNodes.hpp"
+#include "ast/IONodes.hpp"
+#include "ast/GCNodes.hpp"
 
 namespace jeve {
 
@@ -91,7 +101,7 @@ public:
                 return readString();
             }
             
-            if (std::isalpha(current) || current == '_' || current == '[' || current == ']') {
+            if (std::isalpha(current) || current == '_') {
                 return readIdentifier();
             }
             
@@ -159,6 +169,9 @@ private:
             value += "[]";
             position += 2;
             column += 2;
+        }
+        if (value.empty()) {
+            throw ParseError("Lexer error: empty identifier encountered", line, column);
         }
         // Check if it's a keyword
         auto it = keywords.find(value);
@@ -233,7 +246,8 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
     {"to", TokenType::KEYWORD},
     {"step", TokenType::KEYWORD},
     {"true", TokenType::KEYWORD},
-    {"false", TokenType::KEYWORD}
+    {"false", TokenType::KEYWORD},
+    {"function", TokenType::KEYWORD}
 };
 
 const std::unordered_map<std::string, TokenType> Lexer::types = {
@@ -266,11 +280,9 @@ public:
 
     Ref<ASTNode> parse() {
         Ref<BlockNode> block = interpreter.createObject<BlockNode>(&interpreter.getGC());
-        
         while (currentToken.type != TokenType::EOF_TOKEN) {
             block->addStatement(parseStatement());
         }
-        
         return block;
     }
 
@@ -429,8 +441,60 @@ private:
                 
                 return interpreter.createObject<ForNode>(varName, start, end, step, body);
             }
+            else if (currentToken.value == "function") {
+                currentToken = lexer.nextToken();
+                if (currentToken.type != TokenType::IDENTIFIER) {
+                    throw ParseError("Expected function name after 'function'", currentToken.line, currentToken.column);
+                }
+                std::string funcName = currentToken.value;
+                currentToken = lexer.nextToken();
+                if (currentToken.type != TokenType::PUNCTUATION || currentToken.value != "(") {
+                    throw ParseError("Expected '(' after function name", currentToken.line, currentToken.column);
+                }
+                currentToken = lexer.nextToken();
+                std::vector<std::string> params;
+                if (currentToken.type != TokenType::PUNCTUATION || currentToken.value != ")") {
+                    do {
+                        if (currentToken.type != TokenType::IDENTIFIER) {
+                            throw ParseError("Expected parameter name in function definition", currentToken.line, currentToken.column);
+                        }
+                        params.push_back(currentToken.value);
+                        currentToken = lexer.nextToken();
+                        if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == ")") {
+                            break;
+                        }
+                        if (currentToken.type != TokenType::PUNCTUATION || currentToken.value != ",") {
+                            throw ParseError("Expected ',' or ')' in parameter list", currentToken.line, currentToken.column);
+                        }
+                        currentToken = lexer.nextToken();
+                    } while (true);
+                }
+                currentToken = lexer.nextToken();
+                if (currentToken.type != TokenType::PUNCTUATION || currentToken.value != "{") {
+                    throw ParseError("Expected '{' to start function body", currentToken.line, currentToken.column);
+                }
+                currentToken = lexer.nextToken();
+                Ref<BlockNode> body = interpreter.createObject<BlockNode>(&interpreter.getGC());
+                while (currentToken.type != TokenType::PUNCTUATION || currentToken.value != "}") {
+                    body->addStatement(parseStatement());
+                }
+                currentToken = lexer.nextToken();
+                interpreter.getGlobalScope()->set(funcName, Value(interpreter.createObject<UserFunctionNode>(funcName, params, body)));
+                return interpreter.createObject<BlockNode>(&interpreter.getGC()); // Placeholder node
+            }
+            else if (currentToken.value == "return") {
+                currentToken = lexer.nextToken();
+                Ref<ASTNode> expr = parseExpression();
+                if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == ";") {
+                    currentToken = lexer.nextToken();
+                }
+                return interpreter.createObject<ReturnNode>(expr);
+            }
         }
         else if (currentToken.type == TokenType::IDENTIFIER) {
+            if (currentToken.value.empty()) {
+                throw ParseError("Empty identifier token encountered (possible lexer bug or malformed input)", currentToken.line, currentToken.column);
+            }
             std::string name = currentToken.value;
             currentToken = lexer.nextToken();
             
@@ -705,10 +769,11 @@ private:
         }
         
         if (token.type == TokenType::IDENTIFIER) {
-            Ref<ASTNode> node = interpreter.createObject<IdentifierNode>(token.value);
+            std::string identifier = token.value;
+            Ref<ASTNode> node = interpreter.createObject<IdentifierNode>(identifier);
             
             // Check for array access
-            if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == "[") {
+            while (currentToken.type == TokenType::PUNCTUATION && currentToken.value == "[") {
                 currentToken = lexer.nextToken();
                 Ref<ASTNode> index = parseExpression();
                 
@@ -718,6 +783,7 @@ private:
                 }
                 currentToken = lexer.nextToken();
                 
+                // Create ArrayAccessNode with the same base node
                 node = interpreter.createObject<ArrayAccessNode>(node, index);
             }
             
@@ -778,8 +844,14 @@ void JeveInterpreter::interpret(const std::string& code) {
         Ref<ASTNode> ast = parser.parse();
         ast->evaluate(*globalScope);
     } catch (const ParseError& e) {
+        std::cerr << "[CATCH] ParseError: " << e.what() << std::endl;
+        std::cerr << e.getFormattedMessage() << std::endl;
+        std::cout << std::flush;
         throw std::runtime_error(e.getFormattedMessage());
     } catch (const std::exception& e) {
+        std::cerr << "[CATCH] std::exception: " << e.what() << std::endl;
+        std::cerr << "Interpreter error: " << e.what() << std::endl;
+        std::cout << std::flush;
         throw std::runtime_error(std::string("Interpreter error: ") + e.what());
     }
 }

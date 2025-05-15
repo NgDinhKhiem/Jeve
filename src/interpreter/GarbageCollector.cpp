@@ -1,6 +1,9 @@
 #include "Object.hpp"
 #include "ObjectPool.hpp"
 #include "ASTNode.hpp"
+#include "ast/OperatorNodes.hpp"
+#include "ast/IONodes.hpp"
+#include "ast/ControlFlowNodes.hpp"
 #include <algorithm>
 #include <iostream>
 #include <chrono>

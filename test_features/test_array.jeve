@@ -1,0 +1,44 @@
+// Simple array test
+print("Starting test");
+
+// Create array
+arr = [1, 2, 3];
+print("Array created: " + arr);
+
+// Print array
+print("Array: " + arr);
+
+// Modify array
+arr[1] = 42;
+print("Modified array: " + arr);
+
+// Test array assignment and for loop
+arr = [1, 2, 3, 4];
+arr[0] = 5;
+
+for i = 0 to 3 {
+    print("Iteration " + i + ": array: " + arr[i]);
+}
+
+// Test insert
+insert(arr, 2, 99);
+print("After insert at index 2: " + arr);
+
+// Test delete
+delete(arr, 1);
+print("After delete at index 1: " + arr);
+
+// Test function definition and call
+// (Assume your language supports function definition like this)
+//
+// function add(a, b) {
+//     return a + b;
+// }
+// x = add(10, 20);
+// print("add(10, 20) = " + x);
+//
+// If not, this is a placeholder for when you add user-defined functions.
+
+// Finish
+print("Test complete");
+debug_gc(); 

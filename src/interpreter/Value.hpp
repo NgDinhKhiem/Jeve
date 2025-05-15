@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include "Object.hpp"
 
 #include <string>
 #include <vector>
@@ -15,6 +16,7 @@ namespace jeve {
 
 // Forward declaration
 class Value;
+class Object;
 
 // Define a type for arrays of values using shared_ptr with manual reference counting
 class ValueArray {
@@ -80,6 +82,7 @@ public:
         Boolean,
         String,
         Array,
+        Object,
         Null
     };
 
@@ -91,7 +94,8 @@ private:
         double,                  // for Float
         bool,                    // for Boolean
         std::string,             // for String
-        ValueArray*              // for Array - manually reference counted
+        ValueArray*,             // for Array - manually reference counted
+        Object*                 // for Object
     >;
     
     ValueVariant data;
@@ -117,7 +121,7 @@ private:
                 otherArr->addRef();
                 data = otherArr;
             } else {
-                data = nullptr;
+                data = std::monostate{};
                 type = Type::Null;
             }
         } else {
@@ -145,6 +149,9 @@ public:
     // Array constructor
     Value(const std::vector<Value>& vals) 
         : data(new ValueArray(vals)), type(Type::Array) {}
+    
+    // Object constructor
+    Value(const Ref<Object>& obj) : data(obj.get()), type(Type::Object) {}
     
     // Copy constructor
     Value(const Value& other) {
@@ -306,6 +313,9 @@ public:
                 oss << "]";
                 break;
             }
+            case Type::Object:
+                oss << "<object>";
+                break;
             case Type::Null:
                 oss << "null";
                 break;
@@ -342,6 +352,11 @@ public:
             default:
                 return false;
         }
+    }
+
+    Object* getObject() const {
+        if (type != Type::Object) throw std::runtime_error("Value is not an object");
+        return std::get<Object*>(data);
     }
 };
 

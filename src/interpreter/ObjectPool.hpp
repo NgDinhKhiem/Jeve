@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <algorithm>
+#include <typeinfo>
 
 namespace jeve {
 
@@ -15,7 +16,7 @@ private:
     size_t currentSize;
 
 public:
-    ObjectPool(size_t max = 1024 * 1024)
+    ObjectPool(size_t max = 16 * 1024 * 1024)
         : maxSize(max), currentSize(0) {}
 
     ~ObjectPool() {
@@ -26,6 +27,8 @@ public:
     template<typename T, typename... Args>
     T* acquire(Args&&... args) {
         if (currentSize >= maxSize) {
+            std::cout << "[ObjectPool] Size limit reached! Current: " << currentSize 
+                      << ", Max: " << maxSize << std::endl;
             throw std::runtime_error("Object pool size limit reached");
         }
 
@@ -33,6 +36,8 @@ public:
         T* obj = new T(std::forward<Args>(args)...);
         objects.push_back(obj);
         currentSize++;
+        std::cout << "[ObjectPool] Created " << typeid(T).name() 
+                  << " (Total objects: " << currentSize << ")" << std::endl;
         return obj;
     }
 

@@ -1,10 +1,11 @@
 #pragma once
 
+#include "ASTNode.hpp"
 #include "Forward.hpp"
 #include "Value.hpp"
 #include "Object.hpp"
 #include "SymbolTable.hpp"
-#include "ASTNode.hpp"
+#include "GarbageCollector.hpp"
 #include <stack>
 #include <string>
 #include <memory>
@@ -34,6 +35,7 @@ public:
 
     GarbageCollector& getGC() { return gc; }
     SymbolTable& getCurrentScope() { return *scopeStack.top(); }
+    SymbolTable* getGlobalScope() { return globalScope.get(); }
 };
 
 } // namespace jeve 

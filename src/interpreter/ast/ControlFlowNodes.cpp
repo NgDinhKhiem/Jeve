@@ -3,11 +3,15 @@
 namespace jeve {
 
 Value StatementNode::evaluate(SymbolTable& scope) {
-    Value result = statement->evaluate(scope);
-    if (next.get() != nullptr) {
-        result = next->evaluate(scope);
+    try {
+        Value result = statement->evaluate(scope);
+        if (next.get() != nullptr) {
+            result = next->evaluate(scope);
+        }
+        return result;
+    } catch (const ReturnException& e) {
+        throw; // Propagate return up
     }
-    return result;
 }
 
 void BlockNode::addStatement(Ref<ASTNode> stmt) {
@@ -25,7 +29,11 @@ Value BlockNode::evaluate(SymbolTable& scope) {
     if (first.get() == nullptr) {
         return Value();
     }
-    return first->evaluate(scope);
+    try {
+        return first->evaluate(scope);
+    } catch (const ReturnException& e) {
+        throw; // Propagate return up
+    }
 }
 
 Value IfNode::evaluate(SymbolTable& scope) {

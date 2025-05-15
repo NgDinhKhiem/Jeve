@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ASTNode.hpp"
+#include "../ASTNode.hpp"
 #include <string>
 
 namespace jeve {

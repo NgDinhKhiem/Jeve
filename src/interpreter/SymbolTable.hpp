@@ -4,6 +4,7 @@
 #include "Value.hpp"
 #include <unordered_map>
 #include <string>
+#include <stdexcept>
 
 namespace jeve {
 
@@ -38,6 +39,17 @@ public:
     bool has(const std::string& name) const {
         return symbols.find(name) != symbols.end() || 
                (parent && parent->has(name));
+    }
+
+    Value& getMutable(const std::string& name) {
+        auto it = symbols.find(name);
+        if (it != symbols.end()) {
+            return it->second;
+        }
+        if (parent) {
+            return parent->getMutable(name);
+        }
+        throw std::runtime_error("Variable not found: " + name);
     }
 };
 

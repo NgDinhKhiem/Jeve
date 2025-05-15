@@ -7,3 +7,17 @@ for i = 1 to 5 {
     y = 10;
     print "y: " + y;
 }
+
+arr = [1,2,3,4];
+
+arr[0] = 5;
+
+for i = 0 to 3 {
+    print(arr[i]);
+} 
+
+function fac(a) {
+    return a * a; 
+} 
+x = fac(2); 
+print(x);
