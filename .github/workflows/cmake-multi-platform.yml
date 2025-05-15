@@ -87,7 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
-          release_name: "Release 1.0.0"
+          release_name: "Release 1.0.0.0"
           body: "Release of CafeteriaManagerSystem-Backend-1.0-SNAPSHOT"
           draft: false
           prerelease: false
