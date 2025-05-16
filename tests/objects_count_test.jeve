@@ -1,23 +1,29 @@
-for i = 1 to 5 {
-    x = 10;
-    print "x: " + x;
+// runtime_object_creation_insert_delete.jeve
+print("Before loop:");
+debug_gc();
+
+arr = [];
+for i = 0 to 100 {
+    insert(arr, 0, i); // Insert at the beginning
 }
 
-for i = 1 to 5 {
-    y = 10;
-    print "y: " + y;
+debug_gc();
+
+clean_gc();
+
+for j = 0 to 100 {
+    delete(arr, 0); // Remove from the beginning
 }
 
-arr = [1,2,3,4];
+clean_gc();
 
-arr[0] = 5;
+debug_gc();
 
-for i = 0 to 3 {
-    print(arr[i]);
-} 
+arr = [];
+for i = 0 to 500 {
+    insert(arr, 0, i); // Insert at the beginning
+}
 
-function fac(a) {
-    return a * a; 
-} 
-x = fac(2); 
-print(x);
+debug_gc();
+
+clean_gc();

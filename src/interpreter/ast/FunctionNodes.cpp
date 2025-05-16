@@ -35,6 +35,17 @@ Value FunctionCallNode::evaluate(SymbolTable& scope) {
         elems.erase(elems.begin() + idx);
         return Value();
     }
+    if (name == "length") {
+        if (arguments.size() != 1) throw std::runtime_error("length() takes 1 argument");
+        Value arg = arguments[0]->evaluate(scope);
+        if (arg.getType() == Value::Type::Array) {
+            return Value(static_cast<int64_t>(arg.getArray().size()));
+        } else if (arg.getType() == Value::Type::String) {
+            return Value(static_cast<int64_t>(arg.getString().size()));
+        } else {
+            throw std::runtime_error("length() argument must be array or string");
+        }
+    }
 
     // User-defined functions
     if (scope.has(name)) {
@@ -56,6 +67,7 @@ Value FunctionCallNode::evaluate(SymbolTable& scope) {
             }
         }
     }
+    if (g_jeve_debug) std::cerr << "[DEBUG] Unknown function called: '" << name << "'" << std::endl;
     throw std::runtime_error("Unknown function: '" + name + "'");
 }
 

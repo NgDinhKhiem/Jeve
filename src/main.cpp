@@ -4,12 +4,21 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "interpreter/GarbageCollector.hpp"
+
+// Global debug flag
+bool g_jeve_debug = false;
+
+namespace jeve {
+GarbageCollector* g_jeve_gc = nullptr;
+}
 
 void printUsage(const std::string& programName) {
     std::cout << "Usage: " << programName << " [options] <file>" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -Xms<size>  Set initial heap size (e.g., -Xms1m for 1MB)" << std::endl;
     std::cout << "  -Xmx<size>  Set maximum heap size (e.g., -Xmx64m for 64MB)" << std::endl;
+    std::cout << "  --debug     Enable debug/GC logging" << std::endl;
     std::cout << "  -h, --help  Show this help message" << std::endl;
 }
 
@@ -42,6 +51,7 @@ size_t parseMemorySize(const std::string& sizeStr) {
 }
 
 int main(int argc, char* argv[]) {
+    if (g_jeve_debug) std::cout << "[Jeve] Program started" << std::endl;
     if (argc < 2) {
         std::cerr << "Error: No input file specified." << std::endl;
         printUsage(argv[0]);
@@ -74,6 +84,8 @@ int main(int argc, char* argv[]) {
                 std::cerr << "Error: Invalid maximum heap size format. " << e.what() << std::endl;
                 return 1;
             }
+        } else if (arg == "--debug") {
+            g_jeve_debug = true;
         } else {
             // Assume it's the filename
             filename = arg;
@@ -87,6 +99,7 @@ int main(int argc, char* argv[]) {
     }
 
     try {
+        if (g_jeve_debug) std::cout << "[Jeve] Loading file: " << filename << std::endl;
         std::ifstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Error: Could not open file: " << filename << std::endl;
@@ -96,12 +109,15 @@ int main(int argc, char* argv[]) {
         std::stringstream buffer;
         buffer << file.rdbuf();
         std::string code = buffer.str();
-        
+        if (g_jeve_debug) std::cout << "[Jeve] File loaded, starting interpreter" << std::endl;
         jeve::JeveInterpreter interpreter(initialHeap, maxHeap);
+        jeve::g_jeve_gc = &interpreter.getGC();
         interpreter.interpret(code);
-        
+        jeve::g_jeve_gc = nullptr;
+        if (g_jeve_debug) std::cout << "[Jeve] Interpreter finished" << std::endl;
         return 0;
     } catch (const std::exception& e) {
+        if (g_jeve_debug) std::cerr << "[Jeve] Exception: " << e.what() << std::endl;
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

@@ -1,0 +1,8 @@
+print("Creating and discarding many arrays...");
+for i = 0 to 5000 {
+    temp = [];
+    for j = 0 to 20 {
+        temp = temp + [j];
+    }
+}
+print("Finished churn test."); 

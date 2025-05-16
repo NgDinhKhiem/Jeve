@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <typeinfo>
 
+extern bool g_jeve_debug;
+
 namespace jeve {
 
 class ObjectPool {
@@ -27,17 +29,19 @@ public:
     template<typename T, typename... Args>
     T* acquire(Args&&... args) {
         if (currentSize >= maxSize) {
-            std::cout << "[ObjectPool] Size limit reached! Current: " << currentSize 
-                      << ", Max: " << maxSize << std::endl;
+            if (g_jeve_debug) {
+                std::cout << "[ObjectPool] Size limit reached! Current: " << currentSize 
+                          << ", Max: " << maxSize << std::endl;
+            }
             throw std::runtime_error("Object pool size limit reached");
         }
-
-        // Create object only when needed
         T* obj = new T(std::forward<Args>(args)...);
         objects.push_back(obj);
         currentSize++;
-        std::cout << "[ObjectPool] Created " << typeid(T).name() 
-                  << " (Total objects: " << currentSize << ")" << std::endl;
+        if (g_jeve_debug) {
+            std::cout << "[ObjectPool] Created " << typeid(T).name() 
+                      << " (Total objects: " << currentSize << ")" << std::endl;
+        }
         return obj;
     }
 
@@ -52,8 +56,10 @@ public:
     }
 
     void printStats() const {
-        std::cout << "[ObjectPool] Current size: " << currentSize 
-                  << ", Max size: " << maxSize << std::endl;
+        if (g_jeve_debug) {
+            std::cout << "[ObjectPool] Current size: " << currentSize 
+                      << ", Max size: " << maxSize << std::endl;
+        }
     }
 };
 

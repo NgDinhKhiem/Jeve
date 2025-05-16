@@ -10,24 +10,26 @@
 #include <fstream>
 #include <iomanip>
 
+extern bool g_jeve_debug;
+
 namespace jeve {
 
 class MemoryLogger {
 private:
     std::ofstream logFile;
     bool isEnabled;
-    std::chrono::system_clock::time_point startTime;
+    size_t processCount;
 
 public:
     MemoryLogger(const std::string& filename = "memory_usage.csv", bool enabled = true) 
-        : isEnabled(enabled), startTime(std::chrono::system_clock::now()) {
+        : isEnabled(enabled), processCount(0) {
         if (enabled) {
             logFile.open(filename);
             if (!logFile.is_open()) {
                 throw std::runtime_error("Could not open memory log file: " + filename);
             }
             // Write CSV header
-            logFile << "Timestamp,ElapsedMs,ObjectCount,HeapUsage,InitialHeap,MaxHeap\n";
+            logFile << "ProcessCount,ObjectCount,HeapUsage,InitialHeap,MaxHeap\n";
         }
     }
 
@@ -40,15 +42,9 @@ public:
     void logMemoryUsage(size_t objectCount, size_t heapUsage, size_t initialHeap, size_t maxHeap) {
         if (!isEnabled || !logFile.is_open()) return;
 
-        auto now = std::chrono::system_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime);
+        processCount++;
         
-        // Get current timestamp
-        auto time = std::chrono::system_clock::to_time_t(now);
-        std::tm tm = *std::localtime(&time);
-        
-        logFile << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << ","
-                << elapsed.count() << ","
+        logFile << processCount << ","
                 << objectCount << ","
                 << heapUsage << ","
                 << initialHeap << ","
@@ -146,10 +142,12 @@ public:
     size_t getMaxHeap() const { return maxHeap; }
 
     void printStats() const {
-        std::cout << "[GC] Objects: " << getObjectCount()
-                  << ", Heap usage: " << getHeapUsage() << " bytes"
-                  << ", Initial heap: " << getInitialHeap() << " bytes"
-                  << ", Max heap: " << getMaxHeap() << " bytes" << std::endl;
+        if (g_jeve_debug) {
+            std::cout << "[GC] Objects: " << getObjectCount()
+                      << ", Heap usage: " << getHeapUsage() << " bytes"
+                      << ", Initial heap: " << getInitialHeap() << " bytes"
+                      << ", Max heap: " << getMaxHeap() << " bytes" << std::endl;
+        }
         objectPool.printStats();
     }
 
@@ -157,6 +155,8 @@ public:
     void enableLogging() { logger->enable(); }
     void disableLogging() { logger->disable(); }
     bool isLoggingEnabled() const { return logger->isLoggingEnabled(); }
+
+    ObjectPool* getObjectPool() { return &objectPool; }
 };
 
 } // namespace jeve 

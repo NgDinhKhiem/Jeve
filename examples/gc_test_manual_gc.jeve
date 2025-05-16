@@ -1,0 +1,7 @@
+print("Allocating arrays...");
+for i = 0 to 10000 {
+    arr = [i, i+1, i+2];
+}
+print("Forcing GC...");
+debug_gc(); // or clean_gc() if available
+print("GC triggered."); 

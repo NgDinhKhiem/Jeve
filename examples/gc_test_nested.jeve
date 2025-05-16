@@ -1,0 +1,7 @@
+// gc_test_nested.jeve
+print("Testing nested arrays and reassignment...");
+a = [1, 2, 3];
+for i = 0 to 1000 {
+    a = [a, a, a];
+}
+print("Done with nested arrays."); 

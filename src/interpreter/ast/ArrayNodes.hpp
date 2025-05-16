@@ -43,4 +43,6 @@ public:
     std::string toString() const override { return "ArrayAssignmentNode"; }
 };
 
+// Note: Arrays are now GC-managed and allocated via the ObjectPool.
+
 } // namespace jeve 

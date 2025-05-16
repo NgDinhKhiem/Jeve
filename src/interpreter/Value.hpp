@@ -19,7 +19,7 @@ class Value;
 class Object;
 
 // Define a type for arrays of values using shared_ptr with manual reference counting
-class ValueArray {
+class ValueArray : public Object {
 private:
     std::vector<Value> elements;
     mutable std::mutex mutex;
@@ -28,9 +28,9 @@ private:
     friend class Value; // Allow Value to access private members
 
 public:
-    ValueArray() : refCount(1) {}
+    ValueArray(ObjectPool* pool = nullptr) : Object(pool), refCount(1) {}
     
-    explicit ValueArray(const std::vector<Value>& vals) : elements(vals), refCount(1) {}
+    explicit ValueArray(const std::vector<Value>& vals, ObjectPool* pool = nullptr) : Object(pool), elements(vals), refCount(1) {}
     
     ValueArray(const ValueArray& other) {
         std::lock_guard<std::mutex> lock(other.mutex);
@@ -72,6 +72,10 @@ public:
     
     Value& at(size_t index);
     const Value& at(size_t index) const;
+
+    std::string toString() const override {
+        return "<array>";
+    }
 };
 
 class Value {
@@ -94,7 +98,7 @@ private:
         double,                  // for Float
         bool,                    // for Boolean
         std::string,             // for String
-        ValueArray*,             // for Array - manually reference counted
+        Ref<ValueArray>,         // for Array - Ref counted
         Object*                 // for Object
     >;
     
@@ -104,10 +108,8 @@ private:
     // Clean up array if needed
     void cleanupArray() {
         if (type == Type::Array) {
-            ValueArray* arr = std::get<ValueArray*>(data);
-            if (arr && arr->release()) {
-                delete arr;
-            }
+            auto arr = std::get<Ref<ValueArray>>(data);
+            // Ref will handle cleanup
         }
     }
     
@@ -115,15 +117,9 @@ private:
     void copyFrom(const Value& other) {
         type = other.type;
         
-        if (type == Type::Array && std::holds_alternative<ValueArray*>(other.data)) {
-            ValueArray* otherArr = std::get<ValueArray*>(other.data);
-            if (otherArr) {
-                otherArr->addRef();
-                data = otherArr;
-            } else {
-                data = std::monostate{};
-                type = Type::Null;
-            }
+        if (type == Type::Array && std::holds_alternative<Ref<ValueArray>>(other.data)) {
+            auto otherArr = std::get<Ref<ValueArray>>(other.data);
+            data = otherArr;
         } else {
             data = other.data;
         }
@@ -147,8 +143,8 @@ public:
     Value(const char* val) : data(std::string(val)), type(Type::String) {}
     
     // Array constructor
-    Value(const std::vector<Value>& vals) 
-        : data(new ValueArray(vals)), type(Type::Array) {}
+    Value(const std::vector<Value>& vals, ObjectPool* pool = nullptr)
+        : data(Ref<ValueArray>(new ValueArray(vals, pool))), type(Type::Array) {}
     
     // Object constructor
     Value(const Ref<Object>& obj) : data(obj.get()), type(Type::Object) {}
@@ -220,15 +216,15 @@ public:
     }
     
     // Ensure the array is unique before modification (copy-on-write)
-    ValueArray* prepareArrayForModification() {
+    Ref<ValueArray> prepareArrayForModification() {
         if (type != Type::Array) throw std::runtime_error("Value is not an array");
         
-        ValueArray* arr = std::get<ValueArray*>(data);
+        auto arr = std::get<Ref<ValueArray>>(data);
         if (!arr) throw std::runtime_error("Null array value");
         
         // If refCount > 1, create a new copy
         if (arr->getRefCount() > 1) {
-            ValueArray* newArr = new ValueArray(*arr);
+            Ref<ValueArray> newArr = Ref<ValueArray>(new ValueArray(*arr));
             arr->release();
             data = newArr;
             return newArr;
@@ -246,7 +242,7 @@ public:
     const std::vector<Value>& getArray() const {
         if (type != Type::Array) throw std::runtime_error("Value is not an array");
         
-        ValueArray* arr = std::get<ValueArray*>(data);
+        auto arr = std::get<Ref<ValueArray>>(data);
         if (!arr) throw std::runtime_error("Null array value");
         
         return arr->getElements();
@@ -254,7 +250,7 @@ public:
     
     // Array element access with bounds checking
     Value& at(size_t index) {
-        ValueArray* arr = prepareArrayForModification();
+        auto arr = prepareArrayForModification();
         if (index >= arr->size()) {
             throw std::out_of_range("Array index out of bounds");
         }
@@ -264,7 +260,7 @@ public:
     const Value& at(size_t index) const {
         if (type != Type::Array) throw std::runtime_error("Value is not an array");
         
-        ValueArray* arr = std::get<ValueArray*>(data);
+        auto arr = std::get<Ref<ValueArray>>(data);
         if (!arr) throw std::runtime_error("Null array value");
         
         if (index >= arr->size()) {
@@ -294,7 +290,7 @@ public:
             case Type::Array: {
                 if (type != Type::Array) return "null";
                 
-                ValueArray* arr = std::get<ValueArray*>(data);
+                auto arr = std::get<Ref<ValueArray>>(data);
                 if (!arr) return "null";
                 
                 const auto& elements = arr->getElements();
@@ -325,13 +321,13 @@ public:
     }
     
     // Helper method to create an empty array
-    static Value createEmptyArray() {
-        return Value(std::vector<Value>());
+    static Value createEmptyArray(ObjectPool* pool = nullptr) {
+        return Value(std::vector<Value>(), pool);
     }
     
     // Helper method to append a value to an array
     void appendToArray(const Value& value) {
-        ValueArray* arr = prepareArrayForModification();
+        auto arr = prepareArrayForModification();
         arr->push_back(value);
     }
 
@@ -346,7 +342,7 @@ public:
             case Type::String:
                 return !std::get<std::string>(data).empty();
             case Type::Array: {
-                ValueArray* arr = std::get<ValueArray*>(data);
+                auto arr = std::get<Ref<ValueArray>>(data);
                 return arr && !arr->getElements().empty();
             }
             default:

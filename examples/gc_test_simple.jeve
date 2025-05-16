@@ -1,0 +1,6 @@
+// gc_test_simple.jeve
+print("Allocating arrays...");
+for i = 0 to 9999 {
+    arr = [i, i+1, i+2];
+}
+print("Done allocating arrays."); 

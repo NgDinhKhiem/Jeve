@@ -10,7 +10,12 @@ Value ArrayNode::evaluate(SymbolTable& scope) {
     for (const auto& elem : elements) {
         result.push_back(elem->evaluate(scope));
     }
-    return Value(result);
+    // Get the GC from the scope (assume scope has a getGC or pass it in)
+    // For now, use global GC if available, or refactor as needed
+    // This is a placeholder; you may need to pass the GC or ObjectPool explicitly
+    extern jeve::GarbageCollector* g_jeve_gc;
+    ObjectPool* pool = g_jeve_gc ? g_jeve_gc->getObjectPool() : nullptr;
+    return Value(result, pool);
 }
 
 Value ArrayAccessNode::evaluate(SymbolTable& scope) {

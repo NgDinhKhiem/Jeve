@@ -26,7 +26,7 @@ void GarbageCollector::mark(Object* obj) {
 }
 
 void GarbageCollector::processMarkStack() {
-    while (!markStack.empty()) {
+            while (!markStack.empty()) {
         Object* obj = markStack.top();
         markStack.pop();
         
@@ -58,17 +58,17 @@ void GarbageCollector::processMarkStack() {
 void GarbageCollector::collect() {
     if (isCollecting) return;
     isCollecting = true;
-
+    
     // Mark phase - only mark objects that are currently in use
     for (auto* obj : objects) {
         if (obj->getRefCount() > 0) {
-            mark(obj);
+                mark(obj);
         }
-    }
-
+            }
+            
     // Process mark stack to mark all reachable objects
-    processMarkStack();
-
+        processMarkStack();
+        
     // Sweep phase: remove unmarked objects
     auto it = objects.begin();
     while (it != objects.end()) {
@@ -80,12 +80,12 @@ void GarbageCollector::collect() {
                 obj->getPool()->release(obj);
             }
             delete obj;
-        } else {
+            } else {
             (*it)->unmark();
-            ++it;
-        }
+                ++it;
+            }
     }
-
+    
     isCollecting = false;
     
     // Log memory usage after collection
