@@ -768,12 +768,11 @@ void JeveInterpreter::interpret(const std::string& code) {
         }
 
         // Perform final cleanup and output memory stats
-        std::cout << "\nFinal memory cleanup:" << std::endl;
         gc.collect();
-        gc.printStats();
-        
+                
         // Log final memory state
         if (gc.isLoggingEnabled()) {
+            std::cout << "\nFinal memory cleanup:" << std::endl;
             gc.getObjectPool()->printStats();
         }
     } catch (const ParseError& e) {

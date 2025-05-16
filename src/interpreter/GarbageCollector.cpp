@@ -11,6 +11,9 @@
 
 namespace jeve {
 
+// Define the global GC pointer
+GarbageCollector* g_jeve_gc = nullptr;
+
 void GarbageCollector::mark(Object* obj) {
     if (!obj || obj->isMarked()) {
         return;

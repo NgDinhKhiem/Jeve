@@ -10,7 +10,6 @@
 bool g_jeve_debug = false;
 
 namespace jeve {
-GarbageCollector* g_jeve_gc = nullptr;
 }
 
 void printUsage(const std::string& programName) {

@@ -14,6 +14,9 @@ extern bool g_jeve_debug;
 
 namespace jeve {
 
+// Global GC pointer for use across the codebase
+extern GarbageCollector* g_jeve_gc;
+
 class MemoryLogger {
 private:
     std::ofstream logFile;
