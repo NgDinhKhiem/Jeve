@@ -14,7 +14,8 @@ extern bool g_jeve_debug;
 
 namespace jeve {
 
-// Global GC pointer for use across the codebase
+// Forward declarations
+class JeveInterpreter;
 extern GarbageCollector* g_jeve_gc;
 
 class MemoryLogger {
@@ -22,17 +23,18 @@ private:
     std::ofstream logFile;
     bool isEnabled;
     size_t processCount;
+    size_t totalAllocations;
 
 public:
     MemoryLogger(const std::string& filename = "memory_usage.csv", bool enabled = true) 
-        : isEnabled(enabled), processCount(0) {
+        : isEnabled(enabled), processCount(0), totalAllocations(0) {
         if (enabled) {
             logFile.open(filename);
             if (!logFile.is_open()) {
                 throw std::runtime_error("Could not open memory log file: " + filename);
             }
             // Write CSV header
-            logFile << "ProcessCount,ObjectCount,HeapUsage,InitialHeap,MaxHeap\n";
+            logFile << "ProcessCount,ObjectCount,HeapUsage,InitialHeap,MaxHeap,TotalAllocations\n";
         }
     }
 
@@ -46,12 +48,14 @@ public:
         if (!isEnabled || !logFile.is_open()) return;
 
         processCount++;
+        totalAllocations += objectCount;
         
         logFile << processCount << ","
                 << objectCount << ","
                 << heapUsage << ","
                 << initialHeap << ","
-                << maxHeap << "\n";
+                << maxHeap << ","
+                << totalAllocations << "\n";
         
         logFile.flush();
     }
@@ -59,6 +63,7 @@ public:
     void enable() { isEnabled = true; }
     void disable() { isEnabled = false; }
     bool isLoggingEnabled() const { return isEnabled; }
+    size_t getTotalAllocations() const { return totalAllocations; }
 };
 
 class GarbageCollector {
@@ -70,6 +75,7 @@ private:
     size_t maxHeap;
     std::unique_ptr<MemoryLogger> logger;
     ObjectPool objectPool;
+    JeveInterpreter* interpreter;
 
 public:
     GarbageCollector(size_t initialHeapSize = 1024 * 1024, 
@@ -78,7 +84,8 @@ public:
         : isCollecting(false), 
           initialHeap(initialHeapSize), 
           maxHeap(maxHeapSize),
-          logger(std::make_unique<MemoryLogger>(logFile)) {}
+          logger(std::make_unique<MemoryLogger>(logFile)),
+          interpreter(nullptr) {}
 
     ~GarbageCollector() { 
         try {
@@ -87,6 +94,9 @@ public:
             std::cerr << "Error during final garbage collection" << std::endl;
         }
     }
+
+    void setInterpreter(JeveInterpreter* interp) { interpreter = interp; }
+    JeveInterpreter* getInterpreter() const { return interpreter; }
 
     template<typename T, typename... Args>
     T* createObject(Args&&... args) {
@@ -149,7 +159,8 @@ public:
             std::cout << "[GC] Objects: " << getObjectCount()
                       << ", Heap usage: " << getHeapUsage() << " bytes"
                       << ", Initial heap: " << getInitialHeap() << " bytes"
-                      << ", Max heap: " << getMaxHeap() << " bytes" << std::endl;
+                      << ", Max heap: " << getMaxHeap() << " bytes"
+                      << ", Total allocations: " << logger->getTotalAllocations() << std::endl;
         }
         objectPool.printStats();
     }

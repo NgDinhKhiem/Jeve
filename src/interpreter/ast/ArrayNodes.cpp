@@ -1,5 +1,13 @@
 #include "ArrayNodes.hpp"
 #include "BasicNodes.hpp"
+#include "../Forward.hpp"
+#include "../JeveInterpreter.hpp"
+#include "../Object.hpp"
+#include "../ObjectPool.hpp"
+#include "../Value.hpp"
+#include "../SymbolTable.hpp"
+#include "../ASTNode.hpp"
+#include "../GarbageCollector.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -57,7 +65,30 @@ Value ArrayAssignmentNode::evaluate(SymbolTable& scope) {
         if (indexVal < 0 || static_cast<size_t>(indexVal) >= elements.size()) {
             throw std::runtime_error("Array index out of bounds");
         }
-        elements[indexVal] = val;
+        if (interpreter) {
+            switch (val.getType()) {
+                case Value::Type::Integer:
+                    elements[indexVal] = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getInteger())));
+                    break;
+                case Value::Type::Float:
+                    elements[indexVal] = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getFloat())));
+                    break;
+                case Value::Type::String:
+                    elements[indexVal] = Value(Ref<Object>(interpreter->createObject<StringNode>(val.getString())));
+                    break;
+                case Value::Type::Boolean:
+                    elements[indexVal] = Value(Ref<Object>(interpreter->createObject<BooleanNode>(val.getBoolean())));
+                    break;
+                case Value::Type::Array:
+                    elements[indexVal] = val; // Arrays are already GC-managed
+                    break;
+                default:
+                    elements[indexVal] = val;
+                    break;
+            }
+        } else {
+            elements[indexVal] = val;
+        }
         return val;
     }
     // Fallback: evaluate as before (for arr[0][1] = x, etc.)
@@ -75,7 +106,30 @@ Value ArrayAssignmentNode::evaluate(SymbolTable& scope) {
     if (indexVal < 0 || static_cast<size_t>(indexVal) >= elements.size()) {
         throw std::runtime_error("Array index out of bounds");
     }
-    elements[indexVal] = val;
+    if (interpreter) {
+        switch (val.getType()) {
+            case Value::Type::Integer:
+                elements[indexVal] = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getInteger())));
+                break;
+            case Value::Type::Float:
+                elements[indexVal] = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getFloat())));
+                break;
+            case Value::Type::String:
+                elements[indexVal] = Value(Ref<Object>(interpreter->createObject<StringNode>(val.getString())));
+                break;
+            case Value::Type::Boolean:
+                elements[indexVal] = Value(Ref<Object>(interpreter->createObject<BooleanNode>(val.getBoolean())));
+                break;
+            case Value::Type::Array:
+                elements[indexVal] = val; // Arrays are already GC-managed
+                break;
+            default:
+                elements[indexVal] = val;
+                break;
+        }
+    } else {
+        elements[indexVal] = val;
+    }
     return val;
 }
 

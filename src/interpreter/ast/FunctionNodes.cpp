@@ -2,6 +2,7 @@
 #include "BasicNodes.hpp"
 #include <stdexcept>
 #include "ControlFlowNodes.hpp"
+#include "../JeveInterpreter.hpp"
 
 namespace jeve {
 
@@ -21,7 +22,35 @@ Value FunctionCallNode::evaluate(SymbolTable& scope) {
         Value val = arguments[2]->evaluate(scope);
         auto& elems = arr.getArray();
         if (idx < 0 || static_cast<size_t>(idx) > elems.size()) throw std::runtime_error("insert: index out of bounds");
-        elems.insert(elems.begin() + idx, val);
+        
+        if (!interpreter) {
+            throw std::runtime_error("Interpreter not set for FunctionCallNode");
+        }
+        
+        // Create a new object based on the value type
+        Value newVal;
+        switch (val.getType()) {
+            case Value::Type::Integer:
+                newVal = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getInteger())));
+                break;
+            case Value::Type::Float:
+                newVal = Value(Ref<Object>(interpreter->createObject<NumberNode>(val.getFloat())));
+                break;
+            case Value::Type::String:
+                newVal = Value(Ref<Object>(interpreter->createObject<StringNode>(val.getString())));
+                break;
+            case Value::Type::Boolean:
+                newVal = Value(Ref<Object>(interpreter->createObject<BooleanNode>(val.getBoolean())));
+                break;
+            case Value::Type::Array:
+                newVal = val; // Arrays are already GC-managed
+                break;
+            default:
+                newVal = val;
+                break;
+        }
+        
+        elems.insert(elems.begin() + idx, newVal);
         return Value();
     }
     if (name == "delete") {

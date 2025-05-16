@@ -119,7 +119,7 @@ private:
         
         if (type == Type::Array && std::holds_alternative<Ref<ValueArray>>(other.data)) {
             auto otherArr = std::get<Ref<ValueArray>>(other.data);
-            data = otherArr;
+                data = otherArr;
         } else {
             data = other.data;
         }

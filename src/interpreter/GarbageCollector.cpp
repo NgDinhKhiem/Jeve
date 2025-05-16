@@ -66,9 +66,9 @@ void GarbageCollector::collect() {
     for (auto* obj : objects) {
         if (obj->getRefCount() > 0) {
                 mark(obj);
-        }
             }
-            
+        }
+        
     // Process mark stack to mark all reachable objects
         processMarkStack();
         

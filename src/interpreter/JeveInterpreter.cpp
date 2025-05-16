@@ -412,7 +412,7 @@ private:
                     } while (true);
                 }
                 currentToken = lexer.nextToken();
-                return interpreter.createObject<FunctionCallNode>(identifier, args);
+                return interpreter.createObject<FunctionCallNode>(identifier, args, &interpreter);
             }
             Ref<ASTNode> node = interpreter.createObject<IdentifierNode>(identifier);
             
@@ -611,7 +611,7 @@ Ref<ASTNode> Parser::parseStatement() {
                 body->addStatement(parseStatement());
             }
             currentToken = lexer.nextToken();
-            interpreter.getGlobalScope()->set(funcName, Value(interpreter.createObject<UserFunctionNode>(funcName, params, body)));
+            interpreter.getGlobalScope()->set(funcName, Value(interpreter.createObject<UserFunctionNode>(funcName, params, body, &interpreter)));
             return interpreter.createObject<BlockNode>(&interpreter.getGC()); // Placeholder node
         }
         else if (currentToken.value == "return") {
@@ -672,7 +672,8 @@ Ref<ASTNode> Parser::parseStatement() {
                 return interpreter.createObject<ArrayAssignmentNode>(
                     interpreter.createObject<IdentifierNode>(name),
                     index,
-                    value
+                    value,
+                    &interpreter
                 );
             }
         }
@@ -725,7 +726,7 @@ Ref<ASTNode> Parser::parseStatement() {
                 throw ParseError("Expected semicolon after function call", currentToken.line, currentToken.column);
             }
             currentToken = lexer.nextToken();
-            return interpreter.createObject<FunctionCallNode>(name, arguments);
+            return interpreter.createObject<FunctionCallNode>(name, arguments, &interpreter);
         }
         // Handle smart loop (for i, x in array)
         else if (currentToken.type == TokenType::PUNCTUATION && currentToken.value == ",") {
@@ -771,10 +772,10 @@ void JeveInterpreter::interpret(const std::string& code) {
         gc.collect();
                 
         // Log final memory state
-        if (gc.isLoggingEnabled()) {
-            std::cout << "\nFinal memory cleanup:" << std::endl;
-            gc.getObjectPool()->printStats();
-        }
+        // if (gc.isLoggingEnabled()) {
+        //     std::cout << "\nFinal memory cleanup:" << std::endl;
+        //     gc.getObjectPool()->printStats();
+        // }
     } catch (const ParseError& e) {
         std::cerr << "[CATCH] ParseError: " << e.what() << std::endl;
         std::cerr << e.getFormattedMessage() << std::endl;

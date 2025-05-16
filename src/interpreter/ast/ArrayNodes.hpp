@@ -6,6 +6,8 @@
 
 namespace jeve {
 
+class JeveInterpreter;
+
 class ArrayNode : public ASTNode {
 private:
     std::vector<Ref<ASTNode>> elements;
@@ -34,10 +36,11 @@ private:
     Ref<ASTNode> array;
     Ref<ASTNode> index;
     Ref<ASTNode> value;
+    JeveInterpreter* interpreter;
 
 public:
-    ArrayAssignmentNode(Ref<ASTNode> arr, Ref<ASTNode> idx, Ref<ASTNode> val) 
-        : array(arr), index(idx), value(val) {}
+    ArrayAssignmentNode(Ref<ASTNode> arr, Ref<ASTNode> idx, Ref<ASTNode> val, JeveInterpreter* interp = nullptr) 
+        : array(arr), index(idx), value(val), interpreter(interp) {}
 
     Value evaluate(SymbolTable& scope) override;
     std::string toString() const override { return "ArrayAssignmentNode"; }
