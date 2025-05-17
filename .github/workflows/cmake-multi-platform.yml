@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 env:
   BUILD_DIR: build
 
@@ -28,11 +29,16 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
+            arch: Win32
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            arch: x64
 
     steps:
       - uses: actions/checkout@v4
 
-      # Configure CMake for Linux/macOS (bash shell)
+      # Configure for Linux/macOS
       - name: Configure CMake (bash)
         if: runner.os != 'Windows'
         shell: bash
@@ -43,30 +49,30 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -S .
 
-      # Configure CMake for Windows (PowerShell)
+      # Configure for Windows
       - name: Configure CMake (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cmake -B $env:BUILD_DIR `
-            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
-            -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
+            -G "Visual Studio 17 2022" `
+            -A ${{ matrix.arch }} `
             -DCMAKE_BUILD_TYPE=Release `
             -S .
 
-      # Build for Linux/macOS (bash)
+      # Build for Linux/macOS
       - name: Build (bash)
         if: runner.os != 'Windows'
         shell: bash
         run: cmake --build $BUILD_DIR --config Release
 
-      # Build for Windows (PowerShell)
+      # Build for Windows
       - name: Build (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
         run: cmake --build $env:BUILD_DIR --config Release
 
-      # Test for Linux/macOS (bash)
+      # Test for Linux/macOS
       - name: Test (bash)
         if: runner.os != 'Windows'
         shell: bash
@@ -74,7 +80,7 @@ jobs:
           cd $BUILD_DIR
           ctest --build-config Release
 
-      # Test for Windows (PowerShell)
+      # Test for Windows
       - name: Test (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -82,10 +88,11 @@ jobs:
           Set-Location $env:BUILD_DIR
           ctest --build-config Release
 
+      # Upload artifacts
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
+          name: build-${{ matrix.os }}-${{ matrix.c_compiler }}${{ matrix.arch && format('-{0}', matrix.arch) || '' }}
           path: ${{ env.BUILD_DIR }}
 
   release:
@@ -99,40 +106,47 @@ jobs:
     - name: Create directory for collected artifacts
       run: mkdir -p release-files
 
-    # Download artifacts from each platform
-    - name: Download Ubuntu GCC artifact
+    # Download artifacts
+    - name: Download Ubuntu GCC
       uses: actions/download-artifact@v4
       with:
         name: build-ubuntu-latest-gcc
         path: temp/ubuntu-gcc
 
-    - name: Download Ubuntu Clang artifact
+    - name: Download Ubuntu Clang
       uses: actions/download-artifact@v4
       with:
         name: build-ubuntu-latest-clang
         path: temp/ubuntu-clang
 
-    - name: Download macOS Clang artifact
+    - name: Download macOS Clang
       uses: actions/download-artifact@v4
       with:
         name: build-macos-latest-clang
         path: temp/macos-clang
 
-    - name: Download Windows MSVC artifact
+    - name: Download Windows Win32
       uses: actions/download-artifact@v4
       with:
-        name: build-windows-latest-cl
-        path: temp/windows-cl
+        name: build-windows-latest-cl-Win32
+        path: temp/windows-cl-Win32
 
-    # Copy and rename only jeve files
-    - name: Prepare jeve build files
+    - name: Download Windows x64
+      uses: actions/download-artifact@v4
+      with:
+        name: build-windows-latest-cl-x64
+        path: temp/windows-cl-x64
+
+    # Collect jeve binaries
+    - name: Prepare jeve binaries
       shell: bash
       run: |
         mkdir -p release-files
-        find temp/ubuntu-gcc -type f -name 'jeve*' -exec cp {} release-files/jeve-ubuntu-gcc \;
-        find temp/ubuntu-clang -type f -name 'jeve*' -exec cp {} release-files/jeve-ubuntu-clang \;
-        find temp/macos-clang -type f -name 'jeve*' -exec cp {} release-files/jeve-macos-clang \;
-        find temp/windows-cl -type f -name 'jeve*' -exec cp {} release-files/jeve-windows-cl.exe \;
+        find temp/ubuntu-gcc -type f -name 'jeve*' -executable -exec cp {} release-files/jeve-ubuntu-gcc \;
+        find temp/ubuntu-clang -type f -name 'jeve*' -executable -exec cp {} release-files/jeve-ubuntu-clang \;
+        find temp/macos-clang -type f -name 'jeve*' -executable -exec cp {} release-files/jeve-macos-clang \;
+        find temp/windows-cl-Win32 -type f -name 'jeve*.exe' -exec cp {} release-files/jeve-windows-Win32.exe \;
+        find temp/windows-cl-x64 -type f -name 'jeve*.exe' -exec cp {} release-files/jeve-windows-x64.exe \;
 
     - name: Create or Update Tag
       uses: jimeh/update-tags-action@v1
@@ -143,7 +157,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create Release
-      id: create_release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.0.0
